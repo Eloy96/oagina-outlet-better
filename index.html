@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Catálogo Digital</title>
+    <title>Productos Better</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,138 +17,230 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .product-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
         
+        /* Loader */
         .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3b82f6; width: 40px; height: 40px; -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Estilos Carrusel */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-track { scroll-behavior: smooth; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <nav class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-center md:justify-between items-center relative">
             <div class="flex items-center gap-2 text-blue-600">
-                <i data-lucide="store" class="w-6 h-6"></i>
-                <h1 class="text-xl font-bold tracking-tight text-gray-800">Tienda Online</h1>
+                <i data-lucide="package-search" class="w-7 h-7"></i>
+                <h1 class="text-2xl font-black tracking-tighter text-gray-800 uppercase">Productos Better</h1>
             </div>
-            
-            <!-- Botón de contacto (WhatsApp simulado) -->
-            <a href="#" class="text-sm font-medium text-gray-500 hover:text-blue-600 flex items-center gap-1">
-                <i data-lucide="message-circle" class="w-4 h-4"></i> Ayuda
-            </a>
+            <!-- Indicador de actualización en vivo -->
+            <div class="absolute right-4 top-4 md:static flex items-center gap-1.5">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                </span>
+                <span class="text-[10px] font-medium text-gray-400 uppercase tracking-widest hidden md:block">En Vivo</span>
+            </div>
         </div>
     </nav>
 
     <!-- Header / Buscador -->
-    <header class="bg-blue-600 text-white py-12 px-4 shadow-lg mb-8">
+    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-10 px-4 shadow-lg mb-6">
         <div class="max-w-2xl mx-auto text-center">
-            <h2 class="text-3xl font-bold mb-2">Encuentra lo que buscas</h2>
-            <p class="text-blue-100 mb-6 text-sm">Explora nuestro catálogo completo actualizado en tiempo real.</p>
-            
-            <div class="relative max-w-lg mx-auto">
-                <input type="text" id="search-input" placeholder="Buscar producto por nombre o SKU..." 
-                       class="w-full p-4 pl-12 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-xl transition"
+            <h2 class="text-3xl md:text-4xl font-bold mb-3">¿Qué necesitas hoy?</h2>
+            <div class="relative max-w-lg mx-auto mt-6">
+                <input type="text" id="search-input" placeholder="Ej: Mesa, Repisa, Organizador..." 
+                       class="w-full p-4 pl-12 rounded-full text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-xl transition text-lg"
                        onkeyup="app.filterProducts()">
-                <i data-lucide="search" class="absolute left-4 top-4 text-gray-400 w-5 h-5"></i>
+                <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6"></i>
             </div>
         </div>
     </header>
 
     <!-- Contenido Principal -->
-    <main class="flex-1 max-w-6xl mx-auto px-4 pb-12 w-full">
+    <main class="flex-1 max-w-7xl mx-auto px-4 pb-12 w-full overflow-hidden">
         
-        <!-- Estado de Carga -->
+        <!-- Estado de Carga Inicial -->
         <div id="loader-container" class="flex flex-col items-center justify-center py-20">
             <div class="loader mb-4"></div>
-            <p class="text-gray-400 text-sm animate-pulse">Cargando productos...</p>
+            <p class="text-gray-400 text-sm animate-pulse">Cargando catálogo...</p>
         </div>
 
-        <!-- Grid de Productos -->
-        <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 hidden">
-            <!-- Las tarjetas se inyectan aquí -->
-        </div>
-
-        <!-- Estado Vacío / Error -->
-        <div id="empty-state" class="hidden text-center py-20">
-            <div class="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 text-gray-400">
-                <i data-lucide="package-open" class="w-10 h-10"></i>
+        <!-- SECCIÓN: CARRUSEL DE NOVEDADES -->
+        <div id="carousel-section" class="mb-10 hidden fade-in">
+            <div class="flex items-center gap-2 mb-4 px-1">
+                <i data-lucide="sparkles" class="text-yellow-500 w-5 h-5"></i>
+                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-wide">Novedades Recientes</h3>
             </div>
-            <h3 class="text-lg font-bold text-gray-700">No se encontraron productos</h3>
-            <p class="text-gray-500 text-sm mt-1">Intenta con otra búsqueda o recarga la página.</p>
-            <button onclick="location.reload()" class="mt-4 text-blue-600 font-medium hover:underline">Recargar</button>
+            
+            <div class="relative group">
+                <!-- Contenedor Scroll Horizontal -->
+                <div id="carousel-track" class="carousel-track flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory">
+                    <!-- Items del carrusel inyectados por JS -->
+                </div>
+                
+                <!-- Gradientes laterales para indicar scroll -->
+                <div class="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN: GRID DE PRODUCTOS (Resultados de búsqueda) -->
+        <div id="grid-section" class="hidden fade-in">
+            <div class="flex items-center justify-between mb-4 px-1">
+                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
+                    <i data-lucide="grid" class="text-gray-400 w-5 h-5"></i> Catálogo Completo
+                </h3>
+                <span id="result-count" class="text-xs text-gray-500 font-medium bg-gray-200 px-2 py-1 rounded-full">0 productos</span>
+            </div>
+
+            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- Las tarjetas se inyectan aquí -->
+            </div>
+        </div>
+
+        <!-- Estado Vacío -->
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4 text-gray-300">
+                <i data-lucide="search-x" class="w-12 h-12"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">Sin resultados</h3>
+            <p class="text-gray-500 text-sm mt-2">Intenta usar palabras más generales.</p>
         </div>
 
     </main>
 
     <!-- Footer -->
     <footer class="bg-white border-t py-8 mt-auto">
-        <div class="max-w-6xl mx-auto px-4 text-center text-gray-400 text-sm">
-            <p>&copy; 2024 Mi Tienda. Todos los derechos reservados.</p>
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-400 text-xs font-medium uppercase tracking-widest mb-2">Productos Better</p>
+            <p class="text-gray-300 text-[10px]">&copy; 2024 Catálogo Actualizado</p>
         </div>
     </footer>
 
     <script>
         const app = {
-            // URL FIJA DEL SCRIPT DE GOOGLE (Ya configurada)
+            // URL DEL SCRIPT
             apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec", 
             
             allProducts: [],
+            carouselInterval: null,
+            refreshInterval: null,
 
             init() {
                 lucide.createIcons();
-                // Carga automática inmediata
-                this.fetchProducts();
+                this.fetchProducts(true); // Carga inicial (muestra loader)
+
+                // AUTO-ACTUALIZACIÓN DE DATOS (Cada 60 segundos)
+                this.refreshInterval = setInterval(() => {
+                    this.fetchProducts(false); // Carga silenciosa (sin loader)
+                }, 60000); 
+
+                // INICIAR AUTO-SCROLL DEL CARRUSEL
+                this.startCarouselAutoScroll();
             },
 
-            async fetchProducts() {
+            async fetchProducts(showLoader = false) {
                 const loader = document.getElementById('loader-container');
-                const grid = document.getElementById('products-grid');
-                const empty = document.getElementById('empty-state');
-
-                loader.classList.remove('hidden');
-                grid.classList.add('hidden');
-                empty.classList.add('hidden');
+                if(showLoader) loader.classList.remove('hidden');
 
                 try {
-                    // Petición GET con redirect: 'follow'
                     const response = await fetch(`${this.apiUrl}?action=getAll`, { redirect: 'follow' });
                     const json = await response.json();
 
                     if (json.status === 'success') {
                         this.allProducts = json.data;
-                        this.renderProducts(this.allProducts);
-                    } else {
-                        throw new Error("Error en datos");
+                        this.updateUI();
                     }
                 } catch (e) {
-                    console.error(e);
-                    empty.querySelector('h3').innerText = "Error de conexión";
-                    empty.classList.remove('hidden');
+                    console.error("Error actualizando catálogo:", e);
                 } finally {
-                    loader.classList.add('hidden');
+                    if(showLoader) loader.classList.add('hidden');
                 }
             },
 
-            renderProducts(products) {
-                const grid = document.getElementById('products-grid');
-                const empty = document.getElementById('empty-state');
+            updateUI() {
+                // Si hay una búsqueda activa, filtramos, si no, mostramos todo
+                const searchTerm = document.getElementById('search-input').value;
+                if (searchTerm.trim() !== '') {
+                    this.filterProducts();
+                } else {
+                    this.renderGrid(this.allProducts);
+                    this.renderCarousel(this.allProducts.slice(0, 10)); // Top 10 más recientes para el carrusel
+                }
+            },
+
+            renderCarousel(products) {
+                const track = document.getElementById('carousel-track');
+                const section = document.getElementById('carousel-section');
                 
-                grid.innerHTML = ''; // Limpiar
+                if (products.length < 3) {
+                    section.classList.add('hidden');
+                    return;
+                }
+                
+                section.classList.remove('hidden');
+                // Guardamos la posición actual del scroll para no saltar si se actualiza silenciosamente
+                const scrollPos = track.scrollLeft;
+                
+                track.innerHTML = '';
+
+                products.forEach(p => {
+                    const imgUrl = this.processImage(p.image);
+                    const price = this.formatPrice(p.price);
+                    
+                    const card = document.createElement('div');
+                    card.className = "snap-center shrink-0 w-48 md:w-56 bg-white rounded-xl shadow-md border border-blue-100 overflow-hidden flex flex-col";
+                    
+                    card.innerHTML = `
+                        <div class="h-48 bg-gray-100 relative overflow-hidden">
+                             ${imgUrl 
+                                ? `<img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" loading="lazy">`
+                                : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i data-lucide="image" class="w-8 h-8"></i></div>`
+                            }
+                            <div class="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">NUEVO</div>
+                        </div>
+                        <div class="p-3 flex-1 flex flex-col">
+                            <h4 class="font-bold text-gray-800 text-xs line-clamp-2 mb-1 h-8">${p.name}</h4>
+                            <p class="text-blue-600 font-bold text-sm mt-auto">${price}</p>
+                        </div>
+                    `;
+                    track.appendChild(card);
+                });
+                
+                track.scrollLeft = scrollPos; // Restaurar scroll
+                lucide.createIcons();
+            },
+
+            renderGrid(products) {
+                const grid = document.getElementById('products-grid');
+                const section = document.getElementById('grid-section');
+                const empty = document.getElementById('empty-state');
+                const countLabel = document.getElementById('result-count');
+                
+                section.classList.remove('hidden');
+                grid.innerHTML = ''; 
+                countLabel.innerText = `${products.length} productos`;
 
                 if (products.length === 0) {
-                    grid.classList.add('hidden');
+                    section.classList.add('hidden');
                     empty.classList.remove('hidden');
                     return;
                 }
+                
+                empty.classList.add('hidden');
 
                 products.forEach(p => {
-                    // Procesar imagen
                     const imgUrl = this.processImage(p.image);
-                    const price = parseFloat(p.price).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+                    const price = this.formatPrice(p.price);
+                    const isOutOfStock = parseInt(p.stock) === 0;
 
                     const card = document.createElement('div');
-                    card.className = 'product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden fade-in flex flex-col h-full';
+                    card.className = `product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full ${isOutOfStock ? 'opacity-75' : ''}`;
                     
                     card.innerHTML = `
                         <div class="relative w-full aspect-square bg-gray-50 overflow-hidden">
@@ -156,67 +248,83 @@
                                 ? `<img src="${imgUrl}" class="w-full h-full object-cover object-center" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-gray-300\\'><i data-lucide=\\'image-off\\'></i></div>'; lucide.createIcons();">`
                                 : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i data-lucide="image" class="w-10 h-10"></i></div>`
                             }
-                            ${parseInt(p.stock) === 0 
-                                ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">AGOTADO</div>` 
+                            ${isOutOfStock
+                                ? `<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
+                                     <span class="bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded-full">AGOTADO</span>
+                                   </div>` 
                                 : ``
                             }
                         </div>
                         <div class="p-4 flex flex-col flex-1">
-                            <p class="text-xs text-gray-400 font-mono mb-1 uppercase">SKU: ${p.sku}</p>
-                            <h3 class="font-bold text-gray-800 text-sm leading-tight mb-2 line-clamp-2 flex-1" title="${p.name}">${p.name}</h3>
-                            <div class="mt-auto pt-2 border-t border-gray-50 flex justify-between items-end">
-                                <div>
-                                    <span class="block text-[10px] text-gray-400">Precio</span>
-                                    <span class="text-lg font-bold text-blue-600">${price}</span>
-                                </div>
-                                <button class="bg-blue-50 text-blue-600 p-2 rounded-full hover:bg-blue-100 transition" title="Ver detalles">
-                                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-                                </button>
+                            <p class="text-[10px] text-gray-400 font-mono mb-1 uppercase tracking-wider">SKU: ${p.sku}</p>
+                            <h3 class="font-bold text-gray-800 text-sm leading-snug mb-3 line-clamp-2 flex-1" title="${p.name}">${p.name}</h3>
+                            <div class="pt-3 border-t border-gray-50 flex justify-between items-center mt-auto">
+                                <span class="text-xl font-extrabold text-gray-900">${price}</span>
+                                ${!isOutOfStock 
+                                    ? `<span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">Disponible</span>`
+                                    : ``
+                                }
                             </div>
                         </div>
                     `;
                     grid.appendChild(card);
                 });
-
-                grid.classList.remove('hidden');
-                empty.classList.add('hidden');
                 lucide.createIcons();
             },
 
             filterProducts() {
-                const term = document.getElementById('search-input').value.toLowerCase();
-                const filtered = this.allProducts.filter(p => 
-                    p.name.toLowerCase().includes(term) || 
-                    p.sku.toLowerCase().includes(term)
-                );
-                this.renderProducts(filtered);
+                const input = document.getElementById('search-input').value.toLowerCase();
+                // Dividir términos de búsqueda por espacio para buscar "mesa madera" por separado
+                const terms = input.split(' ').filter(t => t.length > 0);
+
+                const filtered = this.allProducts.filter(p => {
+                    const name = p.name.toLowerCase();
+                    const sku = p.sku.toLowerCase();
+                    // Verificar que CADA término esté presente en el nombre O en el sku
+                    return terms.every(term => name.includes(term) || sku.includes(term));
+                });
+
+                // Si hay búsqueda activa, ocultamos el carrusel para no distraer
+                const carouselSection = document.getElementById('carousel-section');
+                if(input.length > 0) {
+                    carouselSection.classList.add('hidden');
+                } else {
+                    carouselSection.classList.remove('hidden');
+                }
+
+                this.renderGrid(filtered);
+            },
+
+            startCarouselAutoScroll() {
+                const track = document.getElementById('carousel-track');
+                // Scroll automático suave cada 3 segundos
+                this.carouselInterval = setInterval(() => {
+                    if (track.scrollWidth - track.clientWidth <= track.scrollLeft + 5) {
+                        track.scrollTo({ left: 0, behavior: 'smooth' }); // Volver al inicio
+                    } else {
+                        track.scrollBy({ left: 240, behavior: 'smooth' }); // Avanzar una tarjeta
+                    }
+                }, 3500);
+            },
+
+            // Utils
+            formatPrice(price) {
+                return parseFloat(price).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
             },
 
             processImage(link) {
                 if (!link) return null;
-                if (link.startsWith('data:')) return link; // Si es base64 directo (raro en catalogo publico pero posible)
+                if (link.startsWith('data:')) return link;
                 
-                // Extraer ID de Drive para usar thumbnail de alta velocidad
                 let id = null;
-                const patterns = [
-                    /id=([a-zA-Z0-9_-]{25,})/,
-                    /\/d\/([a-zA-Z0-9_-]{25,})\//,
-                    /open\?id=([a-zA-Z0-9_-]{25,})/
-                ];
-                
+                const patterns = [ /id=([a-zA-Z0-9_-]{25,})/, /\/d\/([a-zA-Z0-9_-]{25,})\//, /open\?id=([a-zA-Z0-9_-]{25,})/ ];
                 for (let p of patterns) {
                     const match = link.match(p);
-                    if (match && match[1]) {
-                        id = match[1];
-                        break;
-                    }
+                    if (match && match[1]) { id = match[1]; break; }
                 }
                 
-                if (id) {
-                    // sz=w500 pide una imagen optimizada de 500px de ancho (bueno para grid)
-                    return `https://drive.google.com/thumbnail?id=${id}&sz=w500`; 
-                }
-                
+                // Pedimos thumbnail de calidad media (w500) para cargar rápido el grid
+                if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w500`; 
                 return link;
             }
         };
