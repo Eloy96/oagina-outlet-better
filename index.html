@@ -200,7 +200,6 @@
 
     <script>
         const app = {
-            // URL DEL SCRIPT DE GOOGLE (Reemplaza si generaste uno nuevo)
             apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec",
             whatsappNumber: "525542145295", 
             
@@ -224,7 +223,15 @@
                 });
             },
 
-            // --- GESTIÓN DEL CARRITO ---
+            // --- GESTIÓN DEL CARRITO MEJORADA ---
+            
+            // Función auxiliar para obtener cantidad actual en carrito
+            getCartItemQty(sku) {
+                const item = this.cart.find(i => String(i.sku).trim() === String(sku).trim());
+                return item ? item.qty : 0;
+            },
+
+            // Alternar desde el catálogo (Agregar 1 o Quitar todo)
             toggleCartItem(sku) {
                 const strSku = String(sku).trim();
                 const product = this.allProducts.find(p => String(p.sku).trim() === strSku);
@@ -237,7 +244,7 @@
                     this.cart.splice(index, 1); 
                     this.notify("Eliminado del pedido", "error");
                 } else {
-                    const maxStock = parseInt(product.stock);
+                    const maxStock = parseInt(product.stock) || 0; // Asegurar número
                     if (maxStock > 0) {
                         this.cart.push({ ...product, qty: 1 }); 
                         this.notify("¡Agregado al pedido!", "success");
@@ -251,8 +258,33 @@
                 this.updateUI(); 
             },
 
+            // Funciones para modificar cantidad (+ / -) dentro del modal
+            changeQty(sku, delta) {
+                const strSku = String(sku).trim();
+                const index = this.cart.findIndex(item => String(item.sku).trim() === strSku);
+                if (index === -1) return;
+
+                const item = this.cart[index];
+                const product = this.allProducts.find(p => String(p.sku).trim() === strSku);
+                const maxStock = parseInt(product.stock) || 0;
+                
+                let newQty = item.qty + delta;
+
+                if (newQty <= 0) {
+                    this.cart.splice(index, 1); // Eliminar si baja a 0
+                } else if (newQty > maxStock) {
+                    this.notify(`Solo hay ${maxStock} piezas disponibles`, "error");
+                    newQty = maxStock; // Topar al máximo
+                } else {
+                    item.qty = newQty;
+                }
+
+                this.updateCartUI();
+            },
+
             updateCartUI() {
                 const badge = document.getElementById('cart-badge');
+                // Contar total de items (sumando cantidades o solo lineas? Usaremos lineas por ahora)
                 badge.innerText = this.cart.length;
                 
                 const fab = document.getElementById('cart-fab');
@@ -268,6 +300,8 @@
                 if(!document.getElementById('cart-modal').classList.contains('hidden')) {
                     this.renderCartItems();
                 }
+                // Actualizar grid para reflejar estado
+                this.updateUI(); 
             },
 
             toggleCartModal() {
@@ -302,17 +336,28 @@
                 }
 
                 container.innerHTML = this.cart.map(item => {
-                    total += parseFloat(item.price);
+                    total += parseFloat(item.price) * item.qty;
+                    // Encontrar stock real para mostrar
+                    const product = this.allProducts.find(p => String(p.sku) === String(item.sku));
+                    const maxStock = parseInt(product?.stock) || 0;
+
                     return `
                         <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm animate-fade-in">
-                            <img src="${this.processImage(item.image)}" class="w-12 h-12 object-contain bg-gray-50 rounded">
+                            <img src="${this.processImage(item.image)}" class="w-16 h-16 object-contain bg-gray-50 rounded">
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-bold text-gray-800 truncate">${item.name}</h4>
-                                <p class="text-xs text-gray-500">SKU: ${item.sku}</p>
+                                <p class="text-xs text-gray-500 mb-2">SKU: ${item.sku} | Disp: ${maxStock}</p>
+                                
+                                <!-- Control de Cantidad -->
+                                <div class="flex items-center bg-gray-100 rounded-lg w-max">
+                                    <button onclick="app.changeQty('${item.sku}', -1)" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200 rounded-l-lg font-bold transition">-</button>
+                                    <span class="w-8 text-center text-sm font-bold text-gray-800">${item.qty}</span>
+                                    <button onclick="app.changeQty('${item.sku}', 1)" class="w-8 h-8 flex items-center justify-center text-green-600 hover:bg-green-100 rounded-r-lg font-bold transition" ${item.qty >= maxStock ? 'disabled class="opacity-50 cursor-not-allowed w-8 h-8 flex items-center justify-center"' : ''}>+</button>
+                                </div>
                             </div>
                             <div class="text-right">
-                                <div class="font-bold text-blue-600">${this.formatPrice(item.price)}</div>
-                                <button onclick="app.toggleCartItem('${item.sku}'); app.renderCartItems();" class="text-xs text-red-500 hover:text-red-700 font-medium">Quitar</button>
+                                <div class="font-bold text-blue-600 text-sm">${this.formatPrice(parseFloat(item.price) * item.qty)}</div>
+                                <div class="text-[10px] text-gray-400">c/u ${this.formatPrice(item.price)}</div>
                             </div>
                         </div>
                     `;
@@ -373,8 +418,9 @@
                 let total = 0;
 
                 this.cart.forEach(item => {
-                    message += `▪️ ${item.name} (SKU: ${item.sku}) - ${this.formatPrice(item.price)}%0A`;
-                    total += parseFloat(item.price);
+                    const subtotal = parseFloat(item.price) * item.qty;
+                    message += `▪️ ${item.name} (SKU: ${item.sku})%0A   Cant: ${item.qty} x ${this.formatPrice(item.price)} = ${this.formatPrice(subtotal)}%0A`;
+                    total += subtotal;
                 });
 
                 message += `%0A*Total a Pagar: ${this.formatPrice(total)}*`;
@@ -405,10 +451,18 @@
             },
 
             syncCart() {
+                // Actualizar carrito validando existencias reales
                 this.cart = this.cart.map(cartItem => {
                     const freshItem = this.allProducts.find(p => String(p.sku).trim() === String(cartItem.sku).trim());
-                    return freshItem ? { ...freshItem, qty: 1 } : cartItem;
-                });
+                    if (!freshItem) return cartItem; // Si no lo encuentra, lo deja igual (raro)
+                    
+                    // Asegurar que qty no exceda el nuevo stock
+                    const maxStock = parseInt(freshItem.stock) || 0;
+                    const validQty = Math.min(cartItem.qty, maxStock);
+                    
+                    return validQty > 0 ? { ...freshItem, qty: validQty } : null;
+                }).filter(item => item !== null); // Eliminar items que se quedaron sin stock
+
                 this.updateCartUI();
                 if(!document.getElementById('cart-modal').classList.contains('hidden')) {
                     this.renderCartItems();
@@ -493,7 +547,8 @@
             },
 
             createProductCard(p) {
-                const stock = parseInt(p.stock);
+                // Parseo robusto del stock
+                const stock = parseInt(p.stock) || 0; 
                 const isSoldOut = stock <= 0;
                 const inCart = this.cart.some(item => String(item.sku).trim() === String(p.sku).trim());
                 
@@ -504,7 +559,8 @@
                 if(isSoldOut) {
                     btnHtml = `<button disabled class="bg-gray-100 text-gray-400 p-2 rounded-full cursor-not-allowed"><i data-lucide="slash" class="w-4 h-4"></i></button>`;
                 } else if(inCart) {
-                    btnHtml = `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="bg-red-50 text-red-500 p-2 rounded-full hover:scale-110 transition border border-red-100" title="Quitar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                    // Si ya está en el carrito, mostramos icono de "En Carrito" (Check o Trash para quitar)
+                    btnHtml = `<button onclick="event.stopPropagation(); app.toggleCartModal()" class="bg-blue-50 text-blue-600 p-2 rounded-full hover:scale-110 transition border border-blue-100" title="Ver en carrito"><i data-lucide="check" class="w-4 h-4"></i></button>`;
                 } else {
                     btnHtml = `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="bg-green-50 text-green-600 p-2 rounded-full hover:scale-110 transition border border-green-100" title="Agregar"><i data-lucide="plus" class="w-4 h-4"></i></button>`;
                 }
@@ -532,15 +588,15 @@
                 const shuffled = [...this.allProducts].sort(() => 0.5 - Math.random()).slice(0, 4);
                 let html = '';
                 shuffled.forEach(p => {
-                    const isSoldOut = parseInt(p.stock) <= 0;
+                    const stock = parseInt(p.stock) || 0;
+                    const isSoldOut = stock <= 0;
                     const inCart = this.cart.some(item => String(item.sku).trim() === String(p.sku).trim());
                     
-                    // Botón para mosaico
                     let btnIcon = 'plus-circle';
                     let btnClass = 'text-gray-400 hover:text-green-600';
                     
                     if(isSoldOut) { btnIcon = 'slash'; btnClass = 'text-gray-300 cursor-not-allowed'; }
-                    else if(inCart) { btnIcon = 'trash-2'; btnClass = 'text-red-500 hover:text-red-700'; }
+                    else if(inCart) { btnIcon = 'check-circle'; btnClass = 'text-blue-500 hover:text-blue-700'; }
 
                     html += `
                         <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition hover:shadow-md ${isSoldOut ? 'opacity-75' : ''}">
@@ -553,7 +609,7 @@
                                 <h3 class="text-gray-800 text-xs font-bold line-clamp-1 mb-1">${p.name}</h3>
                                 <div class="mt-auto flex justify-between items-center">
                                     <p class="text-blue-600 font-bold text-sm">${this.formatPrice(p.price)}</p>
-                                    <button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${btnClass}" ${isSoldOut ? 'disabled' : ''}><i data-lucide="${btnIcon}" class="w-5 h-5"></i></button>
+                                    <button onclick="event.stopPropagation(); ${inCart ? 'app.toggleCartModal()' : `app.toggleCartItem('${p.sku}')`}" class="${btnClass}" ${isSoldOut ? 'disabled' : ''}><i data-lucide="${btnIcon}" class="w-5 h-5"></i></button>
                                 </div>
                             </div>
                         </div>`;
@@ -566,13 +622,14 @@
                 if(track.children.length > 0) return;
                 const recent = this.allProducts.slice(0, 10); 
                 track.innerHTML = recent.map(p => {
-                    const isSoldOut = parseInt(p.stock) <= 0;
+                    const stock = parseInt(p.stock) || 0;
+                    const isSoldOut = stock <= 0;
                     const inCart = this.cart.some(item => String(item.sku).trim() === String(p.sku).trim());
                     let btnIcon = 'plus-circle';
                     let btnClass = 'text-gray-400 hover:text-green-600';
                     
                     if(isSoldOut) { btnIcon = 'slash'; btnClass = 'text-gray-300 cursor-not-allowed'; }
-                    else if(inCart) { btnIcon = 'trash-2'; btnClass = 'text-red-500 hover:text-red-700'; }
+                    else if(inCart) { btnIcon = 'check-circle'; btnClass = 'text-blue-500 hover:text-blue-700'; }
 
                     return `
                     <div class="snap-start shrink-0 w-36 md:w-44 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition hover:shadow-md ${isSoldOut ? 'opacity-75' : ''}">
@@ -585,7 +642,7 @@
                             <h4 class="text-[10px] md:text-xs font-bold text-gray-700 line-clamp-2 mb-1">${p.name}</h4>
                             <div class="mt-auto flex justify-between items-center">
                                 <p class="text-blue-600 font-bold text-xs md:text-sm">${this.formatPrice(p.price)}</p>
-                                <button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${btnClass}" ${isSoldOut ? 'disabled' : ''}><i data-lucide="${btnIcon}" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); ${inCart ? 'app.toggleCartModal()' : `app.toggleCartItem('${p.sku}')`}" class="${btnClass}" ${isSoldOut ? 'disabled' : ''}><i data-lucide="${btnIcon}" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                     </div>`}).join('');
