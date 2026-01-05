@@ -32,8 +32,8 @@
         .group:hover .img-hover-scale { transform: scale(1.05); }
 
         /* Animación Carrito */
-        @keyframes bounce-in { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        .badge-anim { animation: bounce-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bounce-in { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        .badge-anim { animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col">
@@ -73,7 +73,7 @@
         <!-- Loader Inicial -->
         <div id="loader-container" class="flex flex-col items-center justify-center py-32">
             <div class="loader mb-4"></div>
-            <p class="text-gray-400 text-xs animate-pulse">Cargando...</p>
+            <p class="text-gray-400 text-xs animate-pulse">Cargando catálogo...</p>
         </div>
 
         <!-- CONTENEDOR DE "VITRINA" (Se oculta al buscar) -->
@@ -138,7 +138,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t py-6 mt-auto mb-16">
+    <footer class="bg-white border-t py-6 mt-auto mb-20">
         <div class="max-w-6xl mx-auto px-4 text-center">
             <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Productos Better</p>
             <p class="text-gray-300 text-[9px]">&copy; 2024 Catálogo Digital</p>
@@ -146,18 +146,17 @@
     </footer>
 
     <!-- BOTÓN FLOTANTE CARRITO -->
-    <button id="cart-fab" onclick="app.toggleCartModal()" class="fixed bottom-6 right-6 bg-green-600 text-white rounded-full p-4 shadow-2xl z-50 hover:bg-green-700 transition-transform hover:scale-110 active:scale-95 hidden group">
+    <button id="cart-fab" onclick="app.toggleCartModal()" class="fixed bottom-6 right-6 bg-green-600 text-white rounded-full p-4 shadow-2xl z-50 hover:bg-green-700 transition-transform active:scale-95 group hidden">
         <div class="relative">
-            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
-            <span id="cart-badge" class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-green-600 badge-anim">0</span>
+            <i data-lucide="shopping-cart" class="w-7 h-7"></i>
+            <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-green-600">0</span>
         </div>
         <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">Ver pedido</span>
     </button>
 
     <!-- MODAL CARRITO -->
-    <div id="cart-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex justify-end transition-opacity">
+    <div id="cart-modal" class="fixed inset-0 z-[60] hidden bg-black/50 backdrop-blur-sm flex justify-end transition-opacity">
         <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform translate-x-full" id="cart-panel">
-            <!-- Header Carrito -->
             <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                     <i data-lucide="shopping-bag" class="text-green-600"></i> Mi Pedido
@@ -167,28 +166,26 @@
                 </button>
             </div>
             
-            <!-- Lista Items -->
-            <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
-                <!-- Items inyectados -->
-            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
             
-            <!-- Footer Carrito -->
             <div class="p-4 border-t bg-gray-50">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-gray-500 text-sm">Total Estimado</span>
                     <span id="cart-total" class="text-xl font-black text-gray-900">$0.00</span>
                 </div>
-                <button onclick="app.sendOrderToWhatsapp()" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 active:scale-95">
-                    <i data-lucide="message-circle" class="w-5 h-5"></i> Enviar por WhatsApp
+                <!-- Botón de Envío -->
+                <button id="btn-checkout" onclick="app.processOrder()" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 active:scale-95">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> Enviar Pedido
                 </button>
+                <p class="text-[10px] text-gray-400 text-center mt-2">Al enviar, se descontará el stock automáticamente.</p>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE IMAGEN (Lightbox) -->
+    <!-- MODAL IMAGEN -->
     <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm" onclick="app.closeImageModal()">
         <div class="relative max-w-4xl w-full h-full flex flex-col items-center justify-center">
-            <img id="modal-img" src="" class="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl transition-transform duration-300">
+            <img id="modal-img" src="" class="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl">
             <p id="modal-caption" class="text-white mt-4 text-lg font-bold text-center"></p>
             <button class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition">
                 <i data-lucide="x" class="w-8 h-8"></i>
@@ -196,26 +193,24 @@
         </div>
     </div>
 
-    <!-- Notificación Toast -->
-    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[60] text-white font-medium text-sm hidden transition-all duration-300 text-center w-max max-w-[90%]">
+    <!-- Toast Notification -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[70] text-white font-medium text-sm hidden transition-all duration-300 text-center w-max max-w-[90%]">
         Mensaje
     </div>
 
     <script>
         const app = {
+            // URL DEL SCRIPT DE GOOGLE (Reemplaza si generaste uno nuevo)
             apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec",
             whatsappNumber: "525542145295", 
             
             allProducts: [],
             cart: [], 
             
-            // Variables Scroll Infinito
             displayList: [], 
             renderedCount: 0,
             batchSize: 20, 
             isLoadingMore: false,
-
-            carouselInterval: null,
 
             init() {
                 lucide.createIcons();
@@ -229,42 +224,49 @@
                 });
             },
 
-            // --- CARRITO DE COMPRAS ---
+            // --- GESTIÓN DEL CARRITO ---
             toggleCartItem(sku) {
-                // CORRECCIÓN VITAL: Convertir todo a String para comparar
-                const strSku = String(sku);
-                const index = this.cart.findIndex(item => String(item.sku) === strSku);
+                const strSku = String(sku).trim();
+                const product = this.allProducts.find(p => String(p.sku).trim() === strSku);
+                
+                if (!product) return;
+
+                const index = this.cart.findIndex(item => String(item.sku).trim() === strSku);
                 
                 if (index > -1) {
-                    this.cart.splice(index, 1); // Quitar
+                    this.cart.splice(index, 1); 
                     this.notify("Eliminado del pedido", "error");
                 } else {
-                    const product = this.allProducts.find(p => String(p.sku) === strSku);
-                    if(product) {
-                        this.cart.push({ ...product, qty: 1 }); // Agregar
+                    const maxStock = parseInt(product.stock);
+                    if (maxStock > 0) {
+                        this.cart.push({ ...product, qty: 1 }); 
                         this.notify("¡Agregado al pedido!", "success");
+                    } else {
+                        this.notify("Producto agotado", "error");
+                        return;
                     }
                 }
                 
                 this.updateCartUI();
-                this.updateUI(); // Refrescar estado de botones
+                this.updateUI(); 
             },
 
             updateCartUI() {
-                const fab = document.getElementById('cart-fab');
                 const badge = document.getElementById('cart-badge');
-                const count = this.cart.length;
-
-                badge.innerText = count;
+                badge.innerText = this.cart.length;
                 
-                if (count > 0) {
+                const fab = document.getElementById('cart-fab');
+                if (this.cart.length > 0) {
                     fab.classList.remove('hidden');
-                    // Efecto rebote
                     badge.classList.remove('badge-anim');
-                    void badge.offsetWidth; // Force reflow
+                    void badge.offsetWidth; 
                     badge.classList.add('badge-anim');
                 } else {
                     fab.classList.add('hidden');
+                }
+                
+                if(!document.getElementById('cart-modal').classList.contains('hidden')) {
+                    this.renderCartItems();
                 }
             },
 
@@ -292,6 +294,7 @@
                         <div class="text-center py-10 text-gray-400">
                             <i data-lucide="shopping-cart" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
                             <p>Tu pedido está vacío</p>
+                            <button onclick="app.toggleCartModal()" class="mt-4 text-blue-600 text-sm font-bold">Seguir viendo</button>
                         </div>`;
                     totalLabel.innerText = "$0.00";
                     lucide.createIcons();
@@ -301,7 +304,7 @@
                 container.innerHTML = this.cart.map(item => {
                     total += parseFloat(item.price);
                     return `
-                        <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm animate-fade-in">
                             <img src="${this.processImage(item.image)}" class="w-12 h-12 object-contain bg-gray-50 rounded">
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-bold text-gray-800 truncate">${item.name}</h4>
@@ -309,7 +312,7 @@
                             </div>
                             <div class="text-right">
                                 <div class="font-bold text-blue-600">${this.formatPrice(item.price)}</div>
-                                <button onclick="app.toggleCartItem('${item.sku}'); app.renderCartItems();" class="text-xs text-red-500 hover:underline">Quitar</button>
+                                <button onclick="app.toggleCartItem('${item.sku}'); app.renderCartItems();" class="text-xs text-red-500 hover:text-red-700 font-medium">Quitar</button>
                             </div>
                         </div>
                     `;
@@ -319,10 +322,54 @@
                 lucide.createIcons();
             },
 
-            sendOrderToWhatsapp() {
+            // --- PROCESAR PEDIDO (CHECKOUT) ---
+            async processOrder() {
                 if (this.cart.length === 0) return;
 
-                let message = "Hola, me gustaría pedir los siguientes productos:%0A%0A";
+                const btn = document.getElementById('btn-checkout');
+                const originalContent = btn.innerHTML;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loader !w-5 !h-5 !border-2"></div> Procesando...';
+
+                try {
+                    // 1. Enviar descuento de stock a Google Sheets
+                    const payload = {
+                        action: 'checkout',
+                        items: this.cart.map(i => ({ sku: i.sku, qty: i.qty }))
+                    };
+
+                    await fetch(this.apiUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // 2. Abrir WhatsApp
+                    this.sendOrderToWhatsapp();
+
+                    // 3. Limpiar
+                    this.cart = [];
+                    this.updateCartUI();
+                    this.toggleCartModal();
+                    this.notify("Pedido enviado y stock descontado", "success");
+                    
+                    // 4. Recargar datos para ver el nuevo stock
+                    setTimeout(() => this.fetchProducts(false), 2000);
+
+                } catch (e) {
+                    console.error(e);
+                    this.notify("Hubo un error de conexión", "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }
+            },
+
+            sendOrderToWhatsapp() {
+                let message = "Hola, confirmo mi pedido de Productos Better:%0A%0A";
                 let total = 0;
 
                 this.cart.forEach(item => {
@@ -330,13 +377,13 @@
                     total += parseFloat(item.price);
                 });
 
-                message += `%0A*Total Estimado: ${this.formatPrice(total)}*`;
-                message += "%0A%0AQuedo pendiente para confirmar entrega.";
+                message += `%0A*Total a Pagar: ${this.formatPrice(total)}*`;
+                message += "%0A%0AQuedo en espera de confirmación.";
 
                 window.open(`https://wa.me/${this.whatsappNumber}?text=${message}`, '_blank');
             },
 
-            // --- FETCH DATA ---
+            // --- DATOS Y UI ---
             async fetchProducts(isInitial) {
                 const loader = document.getElementById('loader-container');
                 if(isInitial) loader.classList.remove('hidden');
@@ -359,7 +406,7 @@
 
             syncCart() {
                 this.cart = this.cart.map(cartItem => {
-                    const freshItem = this.allProducts.find(p => String(p.sku) === String(cartItem.sku));
+                    const freshItem = this.allProducts.find(p => String(p.sku).trim() === String(cartItem.sku).trim());
                     return freshItem ? { ...freshItem, qty: 1 } : cartItem;
                 });
                 this.updateCartUI();
@@ -397,135 +444,119 @@
                 else clearBtn.classList.add('hidden');
 
                 const terms = term.split(' ').filter(t => t.length > 0);
-                
                 const filtered = this.allProducts.filter(p => {
-                    const str = this.normalizeText(p.name + " " + p.sku);
+                    const str = (p.name + " " + p.sku).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
                     return terms.every(t => str.includes(t));
                 });
 
-                const showcase = document.getElementById('showcase-container');
-                const gridTitle = document.getElementById('grid-title');
-
-                if (rawTerm.length > 0) {
-                    showcase.classList.add('hidden');
-                    gridTitle.innerHTML = `<i data-lucide="search" class="text-blue-500 w-4 h-4 mr-2"></i> Resultados`;
-                } else {
-                    showcase.classList.remove('hidden');
-                    gridTitle.innerHTML = '<i data-lucide="grid" class="text-gray-400 w-4 h-4 mr-2"></i> Catálogo Completo';
-                }
-
+                document.getElementById('showcase-container').classList.toggle('hidden', rawTerm.length > 0);
+                document.getElementById('grid-title').innerHTML = rawTerm.length > 0 ? `<i data-lucide="search" class="text-blue-500 w-4 h-4 mr-2"></i> Resultados` : '<i data-lucide="grid" class="text-gray-400 w-4 h-4 mr-2"></i> Catálogo Completo';
+                
                 this.initializeGrid(filtered);
             },
 
-            clearSearch() {
-                document.getElementById('search-input').value = '';
-                this.updateUI();
-            },
+            clearSearch() { document.getElementById('search-input').value = ''; this.updateUI(); },
 
-            // --- SCROLL INFINITO ---
-            initializeGrid(productsList) {
-                this.displayList = productsList;
+            initializeGrid(list) {
+                this.displayList = list;
                 this.renderedCount = 0;
-                
                 const grid = document.getElementById('products-grid');
-                const empty = document.getElementById('empty-state');
-                const section = document.getElementById('grid-section');
-                const count = document.getElementById('result-count');
+                grid.innerHTML = '';
+                document.getElementById('result-count').innerText = `${list.length}`;
                 
-                count.innerText = `${productsList.length}`;
-                grid.innerHTML = ''; 
-                
-                if (productsList.length === 0) {
-                    section.classList.add('hidden');
-                    empty.classList.remove('hidden');
-                    return;
+                if (list.length === 0) {
+                    document.getElementById('grid-section').classList.add('hidden');
+                    document.getElementById('empty-state').classList.remove('hidden');
+                } else {
+                    document.getElementById('grid-section').classList.remove('hidden');
+                    document.getElementById('empty-state').classList.add('hidden');
+                    this.renderNextBatch();
                 }
-
-                section.classList.remove('hidden');
-                empty.classList.add('hidden');
-                this.renderNextBatch();
+                lucide.createIcons();
             },
 
             renderNextBatch() {
                 if (this.isLoadingMore || this.renderedCount >= this.displayList.length) return;
-                
                 this.isLoadingMore = true;
-                const scrollLoader = document.getElementById('scroll-loader');
-                if(this.renderedCount > 0) scrollLoader.classList.remove('hidden');
+                const loader = document.getElementById('scroll-loader');
+                if(this.renderedCount > 0) loader.classList.remove('hidden');
 
                 setTimeout(() => {
                     const grid = document.getElementById('products-grid');
-                    const nextBatch = this.displayList.slice(this.renderedCount, this.renderedCount + this.batchSize);
-                    
-                    nextBatch.forEach(p => {
-                        grid.appendChild(this.createProductCard(p));
-                    });
-
-                    this.renderedCount += nextBatch.length;
+                    const batch = this.displayList.slice(this.renderedCount, this.renderedCount + this.batchSize);
+                    batch.forEach(p => grid.appendChild(this.createProductCard(p)));
+                    this.renderedCount += batch.length;
                     this.isLoadingMore = false;
-                    scrollLoader.classList.add('hidden');
+                    loader.classList.add('hidden');
                     lucide.createIcons();
                 }, 50);
             },
 
             createProductCard(p) {
-                const isSoldOut = parseInt(p.stock) === 0;
-                // Forzamos comparación String para el botón visual
-                const inCart = this.cart.some(item => String(item.sku) === String(p.sku));
+                const stock = parseInt(p.stock);
+                const isSoldOut = stock <= 0;
+                const inCart = this.cart.some(item => String(item.sku).trim() === String(p.sku).trim());
                 
                 const card = document.createElement('div');
                 card.className = `product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full fade-in ${isSoldOut ? 'opacity-70' : ''}`;
                 
-                const btnAction = isSoldOut 
-                    ? `<button disabled class="bg-gray-100 text-gray-400 p-2 rounded-full cursor-not-allowed"><i data-lucide="slash" class="w-4 h-4"></i></button>`
-                    : `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${inCart ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'} p-2 rounded-full hover:scale-110 transition shadow-sm border border-transparent hover:border-gray-200">
-                         <i data-lucide="${inCart ? 'trash-2' : 'plus'}" class="w-4 h-4"></i>
-                       </button>`;
+                let btnHtml = "";
+                if(isSoldOut) {
+                    btnHtml = `<button disabled class="bg-gray-100 text-gray-400 p-2 rounded-full cursor-not-allowed"><i data-lucide="slash" class="w-4 h-4"></i></button>`;
+                } else if(inCart) {
+                    btnHtml = `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="bg-red-50 text-red-500 p-2 rounded-full hover:scale-110 transition border border-red-100" title="Quitar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                } else {
+                    btnHtml = `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="bg-green-50 text-green-600 p-2 rounded-full hover:scale-110 transition border border-green-100" title="Agregar"><i data-lucide="plus" class="w-4 h-4"></i></button>`;
+                }
 
                 card.innerHTML = `
                     <div class="h-40 md:h-48 w-full bg-white p-3 flex items-center justify-center relative cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
                         <img src="${this.processImage(p.image)}" class="w-full h-full object-contain hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.style.display='none'">
-                        ${isSoldOut 
-                            ? `<div class="absolute inset-0 bg-white/50 flex items-center justify-center"><span class="bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow">AGOTADO</span></div>` 
-                            : ''
-                        }
+                        ${isSoldOut ? `<div class="absolute inset-0 bg-white/50 flex items-center justify-center"><span class="bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow">AGOTADO</span></div>` : ''}
                     </div>
                     <div class="p-3 flex flex-col flex-1 border-t border-gray-50 bg-gray-50/30">
                         <p class="text-[9px] text-gray-400 font-mono mb-1 uppercase">SKU: ${p.sku}</p>
                         <h3 class="text-xs md:text-sm font-bold text-gray-800 leading-snug mb-2 line-clamp-2 flex-1" title="${p.name}">${p.name}</h3>
                         <div class="mt-auto flex justify-between items-center">
                             <span class="text-base md:text-lg font-black text-gray-900">${this.formatPrice(p.price)}</span>
-                            ${btnAction}
+                            ${btnHtml}
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 return card;
             },
 
+            // --- RENDERIZADO EXTRA ---
             renderMosaic() {
                 const container = document.getElementById('featured-mosaic');
                 if(this.allProducts.length === 0 || container.children.length > 0) return;
-
-                const shuffled = [...this.allProducts].sort(() => 0.5 - Math.random());
-                const featured = shuffled.slice(0, 4);
-                
+                const shuffled = [...this.allProducts].sort(() => 0.5 - Math.random()).slice(0, 4);
                 let html = '';
-                featured.forEach(p => {
+                shuffled.forEach(p => {
+                    const isSoldOut = parseInt(p.stock) <= 0;
+                    const inCart = this.cart.some(item => String(item.sku).trim() === String(p.sku).trim());
+                    
+                    // Botón para mosaico
+                    let btnIcon = 'plus-circle';
+                    let btnClass = 'text-gray-400 hover:text-green-600';
+                    
+                    if(isSoldOut) { btnIcon = 'slash'; btnClass = 'text-gray-300 cursor-not-allowed'; }
+                    else if(inCart) { btnIcon = 'trash-2'; btnClass = 'text-red-500 hover:text-red-700'; }
+
                     html += `
-                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition hover:shadow-md">
+                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition hover:shadow-md ${isSoldOut ? 'opacity-75' : ''}">
                             <div class="h-40 md:h-48 bg-white p-4 flex items-center justify-center relative cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
                                 <img src="${this.processImage(p.image)}" class="w-full h-full object-contain img-hover-scale">
                                 <span class="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">TOP</span>
+                                ${isSoldOut ? `<div class="absolute inset-0 flex items-center justify-center bg-white/40"><span class="bg-black text-white text-[9px] px-2 py-1 rounded">AGOTADO</span></div>` : ''}
                             </div>
                             <div class="p-3 border-t border-gray-50 bg-gray-50/50 flex-1 flex flex-col">
                                 <h3 class="text-gray-800 text-xs font-bold line-clamp-1 mb-1">${p.name}</h3>
                                 <div class="mt-auto flex justify-between items-center">
                                     <p class="text-blue-600 font-bold text-sm">${this.formatPrice(p.price)}</p>
-                                    <button onclick="app.toggleCartItem('${p.sku}')" class="text-gray-400 hover:text-green-600"><i data-lucide="plus-circle" class="w-5 h-5"></i></button>
+                                    <button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${btnClass}" ${isSoldOut ? 'disabled' : ''}><i data-lucide="${btnIcon}" class="w-5 h-5"></i></button>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
                 container.innerHTML = html;
             },
@@ -533,65 +564,45 @@
             renderCarousel() {
                 const track = document.getElementById('carousel-track');
                 if(track.children.length > 0) return;
-
                 const recent = this.allProducts.slice(0, 10); 
-                track.innerHTML = recent.map(p => `
-                    <div class="snap-start shrink-0 w-36 md:w-44 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition hover:shadow-md">
+                track.innerHTML = recent.map(p => {
+                    const isSoldOut = parseInt(p.stock) <= 0;
+                    const inCart = this.cart.some(item => String(item.sku).trim() === String(p.sku).trim());
+                    let btnIcon = 'plus-circle';
+                    let btnClass = 'text-gray-400 hover:text-green-600';
+                    
+                    if(isSoldOut) { btnIcon = 'slash'; btnClass = 'text-gray-300 cursor-not-allowed'; }
+                    else if(inCart) { btnIcon = 'trash-2'; btnClass = 'text-red-500 hover:text-red-700'; }
+
+                    return `
+                    <div class="snap-start shrink-0 w-36 md:w-44 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition hover:shadow-md ${isSoldOut ? 'opacity-75' : ''}">
                         <div class="h-36 md:h-44 bg-white p-3 relative flex items-center justify-center cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
                             <img src="${this.processImage(p.image)}" class="w-full h-full object-contain" loading="lazy">
                             <span class="absolute top-2 right-2 bg-blue-100 text-blue-700 text-[8px] font-bold px-1.5 py-0.5 rounded">NUEVO</span>
+                            ${isSoldOut ? `<div class="absolute inset-0 flex items-center justify-center bg-white/40"><span class="bg-black text-white text-[9px] px-2 py-1 rounded">AGOTADO</span></div>` : ''}
                         </div>
                         <div class="p-2 md:p-3 flex-1 flex flex-col border-t border-gray-50">
                             <h4 class="text-[10px] md:text-xs font-bold text-gray-700 line-clamp-2 mb-1">${p.name}</h4>
                             <div class="mt-auto flex justify-between items-center">
                                 <p class="text-blue-600 font-bold text-xs md:text-sm">${this.formatPrice(p.price)}</p>
-                                <button onclick="app.toggleCartItem('${p.sku}')" class="text-gray-400 hover:text-green-600"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                                <button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${btnClass}" ${isSoldOut ? 'disabled' : ''}><i data-lucide="${btnIcon}" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`}).join('');
                 
                 if (this.carouselInterval) clearInterval(this.carouselInterval);
                 this.carouselInterval = setInterval(() => {
-                    if (track.scrollWidth - track.clientWidth <= track.scrollLeft + 10) {
-                        track.scrollTo({ left: 0, behavior: 'smooth' });
-                    } else {
-                        track.scrollBy({ left: 160, behavior: 'smooth' });
-                    }
+                    if (track.scrollWidth - track.clientWidth <= track.scrollLeft + 10) track.scrollTo({ left: 0, behavior: 'smooth' });
+                    else track.scrollBy({ left: 160, behavior: 'smooth' });
                 }, 4000);
             },
 
-            openImageModal(src, title) {
-                if(!src || src.includes('image-off')) return;
-                const highResSrc = src.replace('sz=w600', 'sz=w1200'); 
-                document.getElementById('modal-img').src = highResSrc;
-                document.getElementById('modal-caption').innerText = title;
-                document.getElementById('image-modal').classList.remove('hidden');
-            },
-
-            closeImageModal() {
-                document.getElementById('image-modal').classList.add('hidden');
-                document.getElementById('modal-img').src = '';
-            },
-
-            processImage(link) {
-                if (!link) return '';
-                const idMatch = link.match(/id=([a-zA-Z0-9_-]{25,})/) || link.match(/\/d\/([a-zA-Z0-9_-]{25,})\//);
-                if (idMatch) return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w600`;
-                return link;
-            },
-
-            formatPrice(p) {
-                return parseFloat(p).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-            },
-
-            notify(msg, type = 'success') {
-                const el = document.getElementById('notification');
-                el.innerText = msg;
-                el.className = `fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[60] text-white font-medium text-sm transition-all duration-300 text-center w-max max-w-[90%] ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
-                el.classList.remove('hidden');
-                setTimeout(() => el.classList.add('hidden'), 3000);
-            }
+            // UTILS
+            openImageModal(src, title) { if(!src) return; document.getElementById('modal-img').src = src.replace('sz=w600', 'sz=w1200'); document.getElementById('modal-caption').innerText = title; document.getElementById('image-modal').classList.remove('hidden'); },
+            closeImageModal() { document.getElementById('image-modal').classList.add('hidden'); document.getElementById('modal-img').src = ''; },
+            processImage(link) { if (!link) return ''; const idMatch = link.match(/id=([a-zA-Z0-9_-]{25,})/) || link.match(/\/d\/([a-zA-Z0-9_-]{25,})\//); if (idMatch) return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w600`; return link; },
+            formatPrice(p) { return parseFloat(p).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }); },
+            notify(msg, type) { const el = document.getElementById('notification'); el.innerText = msg; el.className = `fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[70] text-white font-medium text-sm transition-all duration-300 text-center w-max max-w-[90%] ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 3000); }
         };
 
         document.addEventListener('DOMContentLoaded', () => app.init());
