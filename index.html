@@ -17,136 +17,173 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .product-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
         
         /* Loader */
-        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3b82f6; width: 40px; height: 40px; -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite; }
+        .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #3b82f6; width: 30px; height: 30px; -webkit-animation: spin 1s linear infinite; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Estilos Carrusel */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .carousel-track { scroll-behavior: smooth; }
+        
+        /* Zoom sutil */
+        .img-hover-scale { transition: transform 0.3s ease; }
+        .group:hover .img-hover-scale { transform: scale(1.05); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col">
 
     <!-- Navbar -->
     <nav class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-center md:justify-between items-center relative">
-            <div class="flex items-center gap-2 text-blue-600">
-                <i data-lucide="package-search" class="w-7 h-7"></i>
-                <h1 class="text-2xl font-black tracking-tighter text-gray-800 uppercase">Productos Better</h1>
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 text-blue-700">
+                <i data-lucide="package-search" class="w-6 h-6"></i>
+                <h1 class="text-lg font-black tracking-tighter uppercase">Productos Better</h1>
             </div>
-            <!-- Indicador de actualización en vivo -->
-            <div class="absolute right-4 top-4 md:static flex items-center gap-1.5">
+            <div class="flex items-center gap-2">
                 <span class="relative flex h-2.5 w-2.5">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                 </span>
-                <span class="text-[10px] font-medium text-gray-400 uppercase tracking-widest hidden md:block">En Vivo</span>
             </div>
         </div>
     </nav>
 
-    <!-- Header / Buscador -->
-    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-10 px-4 shadow-lg mb-6">
-        <div class="max-w-2xl mx-auto text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-3">¿Qué necesitas hoy?</h2>
-            <div class="relative max-w-lg mx-auto mt-6">
-                <input type="text" id="search-input" placeholder="Ej: Mesa, Repisa, Organizador..." 
-                       class="w-full p-4 pl-12 rounded-full text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-xl transition text-lg"
-                       onkeyup="app.filterProducts()">
-                <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6"></i>
-            </div>
+    <!-- Search Header Sticky -->
+    <div class="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-[52px] z-30 px-4 py-3 shadow-sm">
+        <div class="max-w-3xl mx-auto relative">
+            <input type="text" id="search-input" placeholder="Buscar (Ej: Repisa, Mesa...)" 
+                   class="w-full bg-gray-100 border-none rounded-full py-2.5 pl-10 pr-10 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:bg-white transition shadow-inner text-sm"
+                   oninput="app.filterProducts()">
+            <i data-lucide="search" class="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+            <button id="clear-search" onclick="app.clearSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+                <i data-lucide="x-circle" class="w-4 h-4"></i>
+            </button>
         </div>
-    </header>
+    </div>
 
     <!-- Contenido Principal -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 pb-12 w-full overflow-hidden">
+    <main class="flex-1 max-w-7xl mx-auto px-4 pb-12 w-full overflow-hidden mt-6">
         
-        <!-- Estado de Carga Inicial -->
-        <div id="loader-container" class="flex flex-col items-center justify-center py-20">
+        <!-- Loader Inicial -->
+        <div id="loader-container" class="flex flex-col items-center justify-center py-32">
             <div class="loader mb-4"></div>
-            <p class="text-gray-400 text-sm animate-pulse">Cargando catálogo...</p>
+            <p class="text-gray-400 text-xs animate-pulse">Cargando...</p>
         </div>
 
-        <!-- SECCIÓN: CARRUSEL DE NOVEDADES -->
-        <div id="carousel-section" class="mb-10 hidden fade-in">
-            <div class="flex items-center gap-2 mb-4 px-1">
-                <i data-lucide="sparkles" class="text-yellow-500 w-5 h-5"></i>
-                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-wide">Novedades Recientes</h3>
+        <!-- CONTENEDOR DE "VITRINA" (Se oculta al buscar) -->
+        <div id="showcase-container" class="space-y-10 fade-in hidden">
+            
+            <!-- MOSAICO DESTACADO -->
+            <section>
+                <div class="flex items-center gap-2 mb-3 px-1">
+                    <i data-lucide="star" class="text-yellow-500 fill-yellow-500 w-4 h-4"></i>
+                    <h3 class="text-base font-bold text-gray-800 uppercase tracking-wide">Destacados</h3>
+                </div>
+                <!-- Grid uniforme de 4 columnas -->
+                <div id="featured-mosaic" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"></div>
+            </section>
+
+            <!-- CARRUSEL DE NOVEDADES -->
+            <section>
+                <div class="flex items-center gap-2 mb-3 px-1">
+                    <i data-lucide="sparkles" class="text-blue-500 w-4 h-4"></i>
+                    <h3 class="text-base font-bold text-gray-800 uppercase tracking-wide">Lo más nuevo</h3>
+                </div>
+                <div class="relative group">
+                    <div id="carousel-track" class="flex gap-3 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory scroll-smooth">
+                        <!-- Items inyectados -->
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-gray-200"></div>
+        </div>
+
+        <!-- GRID DE RESULTADOS / CATÁLOGO COMPLETO -->
+        <div id="grid-section" class="hidden fade-in mt-6">
+            <div class="flex items-center justify-between mb-4 px-1">
+                <h3 id="grid-title" class="text-base font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
+                    <i data-lucide="grid" class="text-gray-400 w-4 h-4"></i> Catálogo Completo
+                </h3>
+                <span id="result-count" class="text-[10px] text-gray-500 font-medium bg-white border px-2 py-1 rounded-full"></span>
+            </div>
+
+            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                <!-- Tarjetas se inyectan aquí -->
             </div>
             
-            <div class="relative group">
-                <!-- Contenedor Scroll Horizontal -->
-                <div id="carousel-track" class="carousel-track flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory">
-                    <!-- Items del carrusel inyectados por JS -->
-                </div>
-                
-                <!-- Gradientes laterales para indicar scroll -->
-                <div class="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
+            <!-- Loader de Scroll Infinito -->
+            <div id="scroll-loader" class="py-8 hidden flex justify-center">
+                <div class="loader !w-6 !h-6 !border-2"></div>
             </div>
         </div>
 
-        <!-- SECCIÓN: GRID DE PRODUCTOS (Resultados de búsqueda) -->
-        <div id="grid-section" class="hidden fade-in">
-            <div class="flex items-center justify-between mb-4 px-1">
-                <h3 class="text-lg font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
-                    <i data-lucide="grid" class="text-gray-400 w-5 h-5"></i> Catálogo Completo
-                </h3>
-                <span id="result-count" class="text-xs text-gray-500 font-medium bg-gray-200 px-2 py-1 rounded-full">0 productos</span>
+        <!-- Estado Sin Resultados -->
+        <div id="empty-state" class="hidden text-center py-20 fade-in">
+            <div class="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 text-gray-300">
+                <i data-lucide="search-x" class="w-8 h-8"></i>
             </div>
-
-            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                <!-- Las tarjetas se inyectan aquí -->
-            </div>
-        </div>
-
-        <!-- Estado Vacío -->
-        <div id="empty-state" class="hidden text-center py-20">
-            <div class="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4 text-gray-300">
-                <i data-lucide="search-x" class="w-12 h-12"></i>
-            </div>
-            <h3 class="text-xl font-bold text-gray-700">Sin resultados</h3>
-            <p class="text-gray-500 text-sm mt-2">Intenta usar palabras más generales.</p>
+            <h3 class="text-lg font-bold text-gray-700">Sin coincidencias</h3>
+            <p class="text-gray-500 text-xs mt-2">Intenta palabras más generales.</p>
+            <button onclick="app.clearSearch()" class="mt-6 px-6 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                Ver todo
+            </button>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t py-8 mt-auto">
+    <footer class="bg-white border-t py-6 mt-auto">
         <div class="max-w-6xl mx-auto px-4 text-center">
-            <p class="text-gray-400 text-xs font-medium uppercase tracking-widest mb-2">Productos Better</p>
-            <p class="text-gray-300 text-[10px]">&copy; 2024 Catálogo Actualizado</p>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Productos Better</p>
+            <p class="text-gray-300 text-[9px]">&copy; 2024 Catálogo Digital</p>
         </div>
     </footer>
 
+    <!-- MODAL DE IMAGEN (Lightbox) -->
+    <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm" onclick="app.closeImageModal()">
+        <div class="relative max-w-4xl w-full h-full flex flex-col items-center justify-center">
+            <img id="modal-img" src="" class="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl transition-transform duration-300">
+            <p id="modal-caption" class="text-white mt-4 text-lg font-bold text-center"></p>
+            <button class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+        </div>
+    </div>
+
     <script>
         const app = {
-            // URL DEL SCRIPT
-            apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec", 
+            apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec",
             
             allProducts: [],
+            
+            // Variables para Scroll Infinito
+            displayList: [], // Lista actual que se está renderizando (completa o filtrada)
+            renderedCount: 0,
+            batchSize: 20, // Cuantos cargar por scroll
+            isLoadingMore: false,
+
             carouselInterval: null,
-            refreshInterval: null,
 
             init() {
                 lucide.createIcons();
-                this.fetchProducts(true); // Carga inicial (muestra loader)
+                this.fetchProducts(true);
+                setInterval(() => this.fetchProducts(false), 60000);
 
-                // AUTO-ACTUALIZACIÓN DE DATOS (Cada 60 segundos)
-                this.refreshInterval = setInterval(() => {
-                    this.fetchProducts(false); // Carga silenciosa (sin loader)
-                }, 60000); 
-
-                // INICIAR AUTO-SCROLL DEL CARRUSEL
-                this.startCarouselAutoScroll();
+                // Event listener para Scroll Infinito
+                window.addEventListener('scroll', () => {
+                    // Si estamos cerca del final de la página (a 300px)
+                    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+                        this.renderNextBatch();
+                    }
+                });
             },
 
-            async fetchProducts(showLoader = false) {
+            async fetchProducts(isInitial) {
                 const loader = document.getElementById('loader-container');
-                if(showLoader) loader.classList.remove('hidden');
+                if(isInitial) loader.classList.remove('hidden');
 
                 try {
                     const response = await fetch(`${this.apiUrl}?action=getAll`, { redirect: 'follow' });
@@ -157,175 +194,224 @@
                         this.updateUI();
                     }
                 } catch (e) {
-                    console.error("Error actualizando catálogo:", e);
+                    console.error(e);
                 } finally {
-                    if(showLoader) loader.classList.add('hidden');
+                    if(isInitial) loader.classList.add('hidden');
                 }
             },
 
             updateUI() {
-                // Si hay una búsqueda activa, filtramos, si no, mostramos todo
-                const searchTerm = document.getElementById('search-input').value;
-                if (searchTerm.trim() !== '') {
+                const searchTerm = document.getElementById('search-input').value.trim();
+                
+                // Renderizar Vitrina (Siempre con los datos más frescos)
+                this.renderMosaic();
+                this.renderCarousel();
+
+                if (searchTerm) {
                     this.filterProducts();
                 } else {
-                    this.renderGrid(this.allProducts);
-                    this.renderCarousel(this.allProducts.slice(0, 10)); // Top 10 más recientes para el carrusel
+                    // MODO POR DEFECTO: Mostrar Vitrina + Catálogo Completo
+                    document.getElementById('showcase-container').classList.remove('hidden');
+                    document.getElementById('grid-title').innerHTML = '<i data-lucide="grid" class="text-gray-400 w-4 h-4 mr-2"></i> Catálogo Completo';
+                    
+                    // Inicializar Grid con todos los productos
+                    this.initializeGrid(this.allProducts);
                 }
             },
 
-            renderCarousel(products) {
-                const track = document.getElementById('carousel-track');
-                const section = document.getElementById('carousel-section');
-                
-                if (products.length < 3) {
-                    section.classList.add('hidden');
-                    return;
-                }
-                
-                section.classList.remove('hidden');
-                // Guardamos la posición actual del scroll para no saltar si se actualiza silenciosamente
-                const scrollPos = track.scrollLeft;
-                
-                track.innerHTML = '';
+            normalizeText(text) {
+                return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            },
 
-                products.forEach(p => {
-                    const imgUrl = this.processImage(p.image);
-                    const price = this.formatPrice(p.price);
-                    
-                    const card = document.createElement('div');
-                    card.className = "snap-center shrink-0 w-48 md:w-56 bg-white rounded-xl shadow-md border border-blue-100 overflow-hidden flex flex-col";
-                    
-                    card.innerHTML = `
-                        <div class="h-48 bg-gray-100 relative overflow-hidden">
-                             ${imgUrl 
-                                ? `<img src="${imgUrl}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" loading="lazy">`
-                                : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i data-lucide="image" class="w-8 h-8"></i></div>`
-                            }
-                            <div class="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">NUEVO</div>
-                        </div>
-                        <div class="p-3 flex-1 flex flex-col">
-                            <h4 class="font-bold text-gray-800 text-xs line-clamp-2 mb-1 h-8">${p.name}</h4>
-                            <p class="text-blue-600 font-bold text-sm mt-auto">${price}</p>
-                        </div>
-                    `;
-                    track.appendChild(card);
+            filterProducts() {
+                const input = document.getElementById('search-input');
+                const clearBtn = document.getElementById('clear-search');
+                const rawTerm = input.value.trim();
+                const term = this.normalizeText(rawTerm);
+                
+                if (rawTerm.length > 0) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+
+                const terms = term.split(' ').filter(t => t.length > 0);
+                
+                const filtered = this.allProducts.filter(p => {
+                    const str = this.normalizeText(p.name + " " + p.sku);
+                    return terms.every(t => str.includes(t));
                 });
-                
-                track.scrollLeft = scrollPos; // Restaurar scroll
-                lucide.createIcons();
+
+                const showcase = document.getElementById('showcase-container');
+                const gridTitle = document.getElementById('grid-title');
+
+                if (rawTerm.length > 0) {
+                    showcase.classList.add('hidden');
+                    gridTitle.innerHTML = `<i data-lucide="search" class="text-blue-500 w-4 h-4 mr-2"></i> Resultados`;
+                } else {
+                    showcase.classList.remove('hidden');
+                    gridTitle.innerHTML = '<i data-lucide="grid" class="text-gray-400 w-4 h-4 mr-2"></i> Catálogo Completo';
+                }
+
+                // Reinicializar grid con los filtrados
+                this.initializeGrid(filtered);
             },
 
-            renderGrid(products) {
-                const grid = document.getElementById('products-grid');
-                const section = document.getElementById('grid-section');
-                const empty = document.getElementById('empty-state');
-                const countLabel = document.getElementById('result-count');
-                
-                section.classList.remove('hidden');
-                grid.innerHTML = ''; 
-                countLabel.innerText = `${products.length} productos`;
+            clearSearch() {
+                document.getElementById('search-input').value = '';
+                this.updateUI(); // Esto resetea a la vista completa
+            },
 
-                if (products.length === 0) {
+            // --- LÓGICA DE RENDERIZADO POR LOTES (SCROLL INFINITO) ---
+            
+            initializeGrid(productsList) {
+                this.displayList = productsList;
+                this.renderedCount = 0;
+                
+                const grid = document.getElementById('products-grid');
+                const empty = document.getElementById('empty-state');
+                const section = document.getElementById('grid-section');
+                const count = document.getElementById('result-count');
+                
+                count.innerText = `${productsList.length}`;
+                grid.innerHTML = ''; // Limpiar grid
+                
+                if (productsList.length === 0) {
                     section.classList.add('hidden');
                     empty.classList.remove('hidden');
                     return;
                 }
-                
+
+                section.classList.remove('hidden');
                 empty.classList.add('hidden');
 
-                products.forEach(p => {
-                    const imgUrl = this.processImage(p.image);
-                    const price = this.formatPrice(p.price);
-                    const isOutOfStock = parseInt(p.stock) === 0;
+                // Renderizar primer lote
+                this.renderNextBatch();
+            },
 
-                    const card = document.createElement('div');
-                    card.className = `product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full ${isOutOfStock ? 'opacity-75' : ''}`;
+            renderNextBatch() {
+                if (this.isLoadingMore || this.renderedCount >= this.displayList.length) return;
+                
+                this.isLoadingMore = true;
+                const scrollLoader = document.getElementById('scroll-loader');
+                if(this.renderedCount > 0) scrollLoader.classList.remove('hidden'); // Solo mostrar loader si no es el primer lote
+
+                // Simulamos un pequeño delay para fluidez (opcional, pero ayuda al navegador)
+                setTimeout(() => {
+                    const grid = document.getElementById('products-grid');
+                    const nextBatch = this.displayList.slice(this.renderedCount, this.renderedCount + this.batchSize);
                     
-                    card.innerHTML = `
-                        <div class="relative w-full aspect-square bg-gray-50 overflow-hidden">
-                            ${imgUrl 
-                                ? `<img src="${imgUrl}" class="w-full h-full object-cover object-center" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-gray-300\\'><i data-lucide=\\'image-off\\'></i></div>'; lucide.createIcons();">`
-                                : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i data-lucide="image" class="w-10 h-10"></i></div>`
-                            }
-                            ${isOutOfStock
-                                ? `<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-                                     <span class="bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded-full">AGOTADO</span>
-                                   </div>` 
-                                : ``
-                            }
+                    nextBatch.forEach(p => {
+                        grid.appendChild(this.createProductCard(p));
+                    });
+
+                    this.renderedCount += nextBatch.length;
+                    this.isLoadingMore = false;
+                    scrollLoader.classList.add('hidden');
+                    lucide.createIcons();
+                }, 50);
+            },
+
+            createProductCard(p) {
+                const isSoldOut = parseInt(p.stock) === 0;
+                const card = document.createElement('div');
+                card.className = `product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full fade-in ${isSoldOut ? 'opacity-70' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="h-40 md:h-48 w-full bg-white p-3 flex items-center justify-center relative cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
+                        <img src="${this.processImage(p.image)}" class="w-full h-full object-contain hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.style.display='none'">
+                        ${isSoldOut 
+                            ? `<div class="absolute inset-0 bg-white/50 flex items-center justify-center"><span class="bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow">AGOTADO</span></div>` 
+                            : ''
+                        }
+                    </div>
+                    <div class="p-3 flex flex-col flex-1 border-t border-gray-50 bg-gray-50/30">
+                        <p class="text-[9px] text-gray-400 font-mono mb-1 uppercase">SKU: ${p.sku}</p>
+                        <h3 class="text-xs md:text-sm font-bold text-gray-800 leading-snug mb-2 line-clamp-2 flex-1" title="${p.name}">${p.name}</h3>
+                        <div class="mt-auto flex justify-between items-end">
+                            <span class="text-base md:text-lg font-black text-gray-900">${this.formatPrice(p.price)}</span>
                         </div>
-                        <div class="p-4 flex flex-col flex-1">
-                            <p class="text-[10px] text-gray-400 font-mono mb-1 uppercase tracking-wider">SKU: ${p.sku}</p>
-                            <h3 class="font-bold text-gray-800 text-sm leading-snug mb-3 line-clamp-2 flex-1" title="${p.name}">${p.name}</h3>
-                            <div class="pt-3 border-t border-gray-50 flex justify-between items-center mt-auto">
-                                <span class="text-xl font-extrabold text-gray-900">${price}</span>
-                                ${!isOutOfStock 
-                                    ? `<span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">Disponible</span>`
-                                    : ``
-                                }
+                    </div>
+                `;
+                return card;
+            },
+
+            // --- MOSAICO & CARRUSEL (Estáticos / Top items) ---
+            renderMosaic() {
+                const container = document.getElementById('featured-mosaic');
+                if(this.allProducts.length === 0) return;
+
+                // Solo renderizamos si es la primera vez o si cambió drásticamente, para no parpadear
+                if(container.children.length > 0) return; 
+
+                const shuffled = [...this.allProducts].sort(() => 0.5 - Math.random());
+                const featured = shuffled.slice(0, 4);
+                
+                let html = '';
+                featured.forEach(p => {
+                    html += `
+                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-md transition" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
+                            <div class="h-40 md:h-48 bg-white p-4 flex items-center justify-center relative">
+                                <img src="${this.processImage(p.image)}" class="w-full h-full object-contain img-hover-scale">
+                                <span class="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">TOP</span>
+                            </div>
+                            <div class="p-3 border-t border-gray-50 bg-gray-50/50 flex-1 flex flex-col">
+                                <h3 class="text-gray-800 text-xs font-bold line-clamp-1 mb-1">${p.name}</h3>
+                                <p class="text-blue-600 font-bold text-sm mt-auto">${this.formatPrice(p.price)}</p>
                             </div>
                         </div>
                     `;
-                    grid.appendChild(card);
                 });
-                lucide.createIcons();
+                container.innerHTML = html;
             },
 
-            filterProducts() {
-                const input = document.getElementById('search-input').value.toLowerCase();
-                // Dividir términos de búsqueda por espacio para buscar "mesa madera" por separado
-                const terms = input.split(' ').filter(t => t.length > 0);
-
-                const filtered = this.allProducts.filter(p => {
-                    const name = p.name.toLowerCase();
-                    const sku = p.sku.toLowerCase();
-                    // Verificar que CADA término esté presente en el nombre O en el sku
-                    return terms.every(term => name.includes(term) || sku.includes(term));
-                });
-
-                // Si hay búsqueda activa, ocultamos el carrusel para no distraer
-                const carouselSection = document.getElementById('carousel-section');
-                if(input.length > 0) {
-                    carouselSection.classList.add('hidden');
-                } else {
-                    carouselSection.classList.remove('hidden');
-                }
-
-                this.renderGrid(filtered);
-            },
-
-            startCarouselAutoScroll() {
+            renderCarousel() {
                 const track = document.getElementById('carousel-track');
-                // Scroll automático suave cada 3 segundos
+                if(track.children.length > 0) return; // Evitar re-render innecesario
+
+                const recent = this.allProducts.slice(0, 10); 
+                track.innerHTML = recent.map(p => `
+                    <div class="snap-start shrink-0 w-36 md:w-44 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
+                        <div class="h-36 md:h-44 bg-white p-3 relative flex items-center justify-center">
+                            <img src="${this.processImage(p.image)}" class="w-full h-full object-contain" loading="lazy">
+                            <span class="absolute top-2 right-2 bg-blue-100 text-blue-700 text-[8px] font-bold px-1.5 py-0.5 rounded">NUEVO</span>
+                        </div>
+                        <div class="p-2 md:p-3 flex-1 flex flex-col border-t border-gray-50">
+                            <h4 class="text-[10px] md:text-xs font-bold text-gray-700 line-clamp-2 mb-1">${p.name}</h4>
+                            <p class="text-blue-600 font-bold text-xs md:text-sm mt-auto">${this.formatPrice(p.price)}</p>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (this.carouselInterval) clearInterval(this.carouselInterval);
                 this.carouselInterval = setInterval(() => {
-                    if (track.scrollWidth - track.clientWidth <= track.scrollLeft + 5) {
-                        track.scrollTo({ left: 0, behavior: 'smooth' }); // Volver al inicio
+                    if (track.scrollWidth - track.clientWidth <= track.scrollLeft + 10) {
+                        track.scrollTo({ left: 0, behavior: 'smooth' });
                     } else {
-                        track.scrollBy({ left: 240, behavior: 'smooth' }); // Avanzar una tarjeta
+                        track.scrollBy({ left: 160, behavior: 'smooth' });
                     }
-                }, 3500);
+                }, 4000);
             },
 
-            // Utils
-            formatPrice(price) {
-                return parseFloat(price).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+            openImageModal(src, title) {
+                if(!src || src.includes('image-off')) return;
+                const highResSrc = src.replace('sz=w600', 'sz=w1200'); 
+                document.getElementById('modal-img').src = highResSrc;
+                document.getElementById('modal-caption').innerText = title;
+                document.getElementById('image-modal').classList.remove('hidden');
+            },
+
+            closeImageModal() {
+                document.getElementById('image-modal').classList.add('hidden');
+                document.getElementById('modal-img').src = '';
             },
 
             processImage(link) {
-                if (!link) return null;
-                if (link.startsWith('data:')) return link;
-                
-                let id = null;
-                const patterns = [ /id=([a-zA-Z0-9_-]{25,})/, /\/d\/([a-zA-Z0-9_-]{25,})\//, /open\?id=([a-zA-Z0-9_-]{25,})/ ];
-                for (let p of patterns) {
-                    const match = link.match(p);
-                    if (match && match[1]) { id = match[1]; break; }
-                }
-                
-                // Pedimos thumbnail de calidad media (w500) para cargar rápido el grid
-                if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w500`; 
+                if (!link) return '';
+                const idMatch = link.match(/id=([a-zA-Z0-9_-]{25,})/) || link.match(/\/d\/([a-zA-Z0-9_-]{25,})\//);
+                if (idMatch) return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w600`;
                 return link;
+            },
+
+            formatPrice(p) {
+                return parseFloat(p).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
             }
         };
 
