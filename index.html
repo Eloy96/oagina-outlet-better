@@ -30,6 +30,10 @@
         /* Zoom sutil */
         .img-hover-scale { transition: transform 0.3s ease; }
         .group:hover .img-hover-scale { transform: scale(1.05); }
+
+        /* Animación Carrito */
+        @keyframes bounce-in { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .badge-anim { animation: bounce-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col">
@@ -64,7 +68,7 @@
     </div>
 
     <!-- Contenido Principal -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 pb-12 w-full overflow-hidden mt-6">
+    <main class="flex-1 max-w-7xl mx-auto px-4 pb-24 w-full overflow-hidden mt-6">
         
         <!-- Loader Inicial -->
         <div id="loader-container" class="flex flex-col items-center justify-center py-32">
@@ -81,7 +85,6 @@
                     <i data-lucide="star" class="text-yellow-500 fill-yellow-500 w-4 h-4"></i>
                     <h3 class="text-base font-bold text-gray-800 uppercase tracking-wide">Destacados</h3>
                 </div>
-                <!-- Grid uniforme de 4 columnas -->
                 <div id="featured-mosaic" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"></div>
             </section>
 
@@ -101,7 +104,7 @@
             <div class="border-t border-gray-200"></div>
         </div>
 
-        <!-- GRID DE RESULTADOS / CATÁLOGO COMPLETO -->
+        <!-- GRID DE RESULTADOS -->
         <div id="grid-section" class="hidden fade-in mt-6">
             <div class="flex items-center justify-between mb-4 px-1">
                 <h3 id="grid-title" class="text-base font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
@@ -135,12 +138,52 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t py-6 mt-auto">
+    <footer class="bg-white border-t py-6 mt-auto mb-16">
         <div class="max-w-6xl mx-auto px-4 text-center">
             <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Productos Better</p>
             <p class="text-gray-300 text-[9px]">&copy; 2024 Catálogo Digital</p>
         </div>
     </footer>
+
+    <!-- BOTÓN FLOTANTE CARRITO -->
+    <button id="cart-fab" onclick="app.toggleCartModal()" class="fixed bottom-6 right-6 bg-green-600 text-white rounded-full p-4 shadow-2xl z-50 hover:bg-green-700 transition-transform hover:scale-110 active:scale-95 hidden group">
+        <div class="relative">
+            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+            <span id="cart-badge" class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-green-600 badge-anim">0</span>
+        </div>
+        <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">Ver pedido</span>
+    </button>
+
+    <!-- MODAL CARRITO -->
+    <div id="cart-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex justify-end transition-opacity">
+        <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform translate-x-full" id="cart-panel">
+            <!-- Header Carrito -->
+            <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="shopping-bag" class="text-green-600"></i> Mi Pedido
+                </h2>
+                <button onclick="app.toggleCartModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Lista Items -->
+            <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Items inyectados -->
+            </div>
+            
+            <!-- Footer Carrito -->
+            <div class="p-4 border-t bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-500 text-sm">Total Estimado</span>
+                    <span id="cart-total" class="text-xl font-black text-gray-900">$0.00</span>
+                </div>
+                <button onclick="app.sendOrderToWhatsapp()" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 active:scale-95">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> Enviar por WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE IMAGEN (Lightbox) -->
     <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm" onclick="app.closeImageModal()">
@@ -156,13 +199,15 @@
     <script>
         const app = {
             apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec",
+            whatsappNumber: "525542145295", 
             
             allProducts: [],
+            cart: [], // Array para guardar SKUs seleccionados
             
-            // Variables para Scroll Infinito
-            displayList: [], // Lista actual que se está renderizando (completa o filtrada)
+            // Variables Scroll Infinito
+            displayList: [], 
             renderedCount: 0,
-            batchSize: 20, // Cuantos cargar por scroll
+            batchSize: 20, 
             isLoadingMore: false,
 
             carouselInterval: null,
@@ -172,15 +217,114 @@
                 this.fetchProducts(true);
                 setInterval(() => this.fetchProducts(false), 60000);
 
-                // Event listener para Scroll Infinito
                 window.addEventListener('scroll', () => {
-                    // Si estamos cerca del final de la página (a 300px)
                     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
                         this.renderNextBatch();
                     }
                 });
             },
 
+            // --- CARRITO DE COMPRAS ---
+            toggleCartItem(sku) {
+                const index = this.cart.findIndex(item => item.sku === sku);
+                if (index > -1) {
+                    this.cart.splice(index, 1); // Quitar
+                } else {
+                    const product = this.allProducts.find(p => p.sku === sku);
+                    if(product) this.cart.push({ ...product, qty: 1 }); // Agregar
+                }
+                this.updateCartUI();
+                this.updateUI(); // Refrescar botones
+            },
+
+            updateCartUI() {
+                const fab = document.getElementById('cart-fab');
+                const badge = document.getElementById('cart-badge');
+                const count = this.cart.length;
+
+                badge.innerText = count;
+                
+                if (count > 0) {
+                    fab.classList.remove('hidden');
+                    // Efecto rebote pequeño
+                    badge.classList.remove('badge-anim');
+                    void badge.offsetWidth; // Trigger reflow
+                    badge.classList.add('badge-anim');
+                } else {
+                    fab.classList.add('hidden');
+                }
+            },
+
+            toggleCartModal() {
+                const modal = document.getElementById('cart-modal');
+                const panel = document.getElementById('cart-panel');
+                
+                if (modal.classList.contains('hidden')) {
+                    // Abrir
+                    modal.classList.remove('hidden');
+                    this.renderCartItems();
+                    setTimeout(() => panel.classList.remove('translate-x-full'), 10);
+                } else {
+                    // Cerrar
+                    panel.classList.add('translate-x-full');
+                    setTimeout(() => modal.classList.add('hidden'), 300);
+                }
+            },
+
+            renderCartItems() {
+                const container = document.getElementById('cart-items');
+                const totalLabel = document.getElementById('cart-total');
+                let total = 0;
+
+                if (this.cart.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-10 text-gray-400">
+                            <i data-lucide="shopping-cart" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                            <p>Tu pedido está vacío</p>
+                        </div>`;
+                    totalLabel.innerText = "$0.00";
+                    return;
+                }
+
+                container.innerHTML = this.cart.map(item => {
+                    total += parseFloat(item.price);
+                    return `
+                        <div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                            <img src="${this.processImage(item.image)}" class="w-12 h-12 object-contain bg-gray-50 rounded">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold text-gray-800 truncate">${item.name}</h4>
+                                <p class="text-xs text-gray-500">SKU: ${item.sku}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-blue-600">${this.formatPrice(item.price)}</div>
+                                <button onclick="app.toggleCartItem('${item.sku}'); app.renderCartItems();" class="text-xs text-red-500 hover:underline">Quitar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                totalLabel.innerText = this.formatPrice(total);
+                lucide.createIcons();
+            },
+
+            sendOrderToWhatsapp() {
+                if (this.cart.length === 0) return;
+
+                let message = "Hola, me gustaría pedir los siguientes productos:%0A%0A";
+                let total = 0;
+
+                this.cart.forEach(item => {
+                    message += `▪️ ${item.name} (SKU: ${item.sku}) - ${this.formatPrice(item.price)}%0A`;
+                    total += parseFloat(item.price);
+                });
+
+                message += `%0A*Total Estimado: ${this.formatPrice(total)}*`;
+                message += "%0A%0AQuedo pendiente para confirmar entrega.";
+
+                window.open(`https://wa.me/${this.whatsappNumber}?text=${message}`, '_blank');
+            },
+
+            // --- FETCH DATA ---
             async fetchProducts(isInitial) {
                 const loader = document.getElementById('loader-container');
                 if(isInitial) loader.classList.remove('hidden');
@@ -192,6 +336,8 @@
                     if (json.status === 'success') {
                         this.allProducts = json.data;
                         this.updateUI();
+                        // Mantener sincronizado el carrito por si cambió algún precio o stock
+                        this.syncCart(); 
                     }
                 } catch (e) {
                     console.error(e);
@@ -200,21 +346,29 @@
                 }
             },
 
+            syncCart() {
+                // Actualizar datos del carrito con la info fresca (ej. si cambió precio)
+                this.cart = this.cart.map(cartItem => {
+                    const freshItem = this.allProducts.find(p => p.sku === cartItem.sku);
+                    return freshItem ? { ...freshItem, qty: 1 } : cartItem;
+                });
+                this.updateCartUI();
+                if(!document.getElementById('cart-modal').classList.contains('hidden')) {
+                    this.renderCartItems();
+                }
+            },
+
             updateUI() {
                 const searchTerm = document.getElementById('search-input').value.trim();
                 
-                // Renderizar Vitrina (Siempre con los datos más frescos)
                 this.renderMosaic();
                 this.renderCarousel();
 
                 if (searchTerm) {
                     this.filterProducts();
                 } else {
-                    // MODO POR DEFECTO: Mostrar Vitrina + Catálogo Completo
                     document.getElementById('showcase-container').classList.remove('hidden');
                     document.getElementById('grid-title').innerHTML = '<i data-lucide="grid" class="text-gray-400 w-4 h-4 mr-2"></i> Catálogo Completo';
-                    
-                    // Inicializar Grid con todos los productos
                     this.initializeGrid(this.allProducts);
                 }
             },
@@ -250,17 +404,15 @@
                     gridTitle.innerHTML = '<i data-lucide="grid" class="text-gray-400 w-4 h-4 mr-2"></i> Catálogo Completo';
                 }
 
-                // Reinicializar grid con los filtrados
                 this.initializeGrid(filtered);
             },
 
             clearSearch() {
                 document.getElementById('search-input').value = '';
-                this.updateUI(); // Esto resetea a la vista completa
+                this.updateUI();
             },
 
-            // --- LÓGICA DE RENDERIZADO POR LOTES (SCROLL INFINITO) ---
-            
+            // --- SCROLL INFINITO ---
             initializeGrid(productsList) {
                 this.displayList = productsList;
                 this.renderedCount = 0;
@@ -271,7 +423,7 @@
                 const count = document.getElementById('result-count');
                 
                 count.innerText = `${productsList.length}`;
-                grid.innerHTML = ''; // Limpiar grid
+                grid.innerHTML = ''; 
                 
                 if (productsList.length === 0) {
                     section.classList.add('hidden');
@@ -281,8 +433,6 @@
 
                 section.classList.remove('hidden');
                 empty.classList.add('hidden');
-
-                // Renderizar primer lote
                 this.renderNextBatch();
             },
 
@@ -291,9 +441,8 @@
                 
                 this.isLoadingMore = true;
                 const scrollLoader = document.getElementById('scroll-loader');
-                if(this.renderedCount > 0) scrollLoader.classList.remove('hidden'); // Solo mostrar loader si no es el primer lote
+                if(this.renderedCount > 0) scrollLoader.classList.remove('hidden');
 
-                // Simulamos un pequeño delay para fluidez (opcional, pero ayuda al navegador)
                 setTimeout(() => {
                     const grid = document.getElementById('products-grid');
                     const nextBatch = this.displayList.slice(this.renderedCount, this.renderedCount + this.batchSize);
@@ -311,9 +460,18 @@
 
             createProductCard(p) {
                 const isSoldOut = parseInt(p.stock) === 0;
+                const inCart = this.cart.some(item => item.sku === p.sku);
+                
                 const card = document.createElement('div');
                 card.className = `product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full fade-in ${isSoldOut ? 'opacity-70' : ''}`;
                 
+                // Botón dinámico (Agregar / Quitar)
+                const btnAction = isSoldOut 
+                    ? `<button disabled class="bg-gray-100 text-gray-400 p-2 rounded-full cursor-not-allowed"><i data-lucide="slash" class="w-4 h-4"></i></button>`
+                    : `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${inCart ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'} p-2 rounded-full hover:scale-110 transition shadow-sm border border-transparent hover:border-gray-200">
+                         <i data-lucide="${inCart ? 'trash-2' : 'plus'}" class="w-4 h-4"></i>
+                       </button>`;
+
                 card.innerHTML = `
                     <div class="h-40 md:h-48 w-full bg-white p-3 flex items-center justify-center relative cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
                         <img src="${this.processImage(p.image)}" class="w-full h-full object-contain hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.style.display='none'">
@@ -325,36 +483,37 @@
                     <div class="p-3 flex flex-col flex-1 border-t border-gray-50 bg-gray-50/30">
                         <p class="text-[9px] text-gray-400 font-mono mb-1 uppercase">SKU: ${p.sku}</p>
                         <h3 class="text-xs md:text-sm font-bold text-gray-800 leading-snug mb-2 line-clamp-2 flex-1" title="${p.name}">${p.name}</h3>
-                        <div class="mt-auto flex justify-between items-end">
+                        <div class="mt-auto flex justify-between items-center">
                             <span class="text-base md:text-lg font-black text-gray-900">${this.formatPrice(p.price)}</span>
+                            ${btnAction}
                         </div>
                     </div>
                 `;
                 return card;
             },
 
-            // --- MOSAICO & CARRUSEL (Estáticos / Top items) ---
             renderMosaic() {
                 const container = document.getElementById('featured-mosaic');
-                if(this.allProducts.length === 0) return;
-
-                // Solo renderizamos si es la primera vez o si cambió drásticamente, para no parpadear
-                if(container.children.length > 0) return; 
+                if(this.allProducts.length === 0 || container.children.length > 0) return;
 
                 const shuffled = [...this.allProducts].sort(() => 0.5 - Math.random());
                 const featured = shuffled.slice(0, 4);
                 
                 let html = '';
                 featured.forEach(p => {
+                    const inCart = this.cart.some(item => item.sku === p.sku);
                     html += `
-                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group cursor-pointer hover:shadow-md transition" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
-                            <div class="h-40 md:h-48 bg-white p-4 flex items-center justify-center relative">
+                        <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition hover:shadow-md">
+                            <div class="h-40 md:h-48 bg-white p-4 flex items-center justify-center relative cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
                                 <img src="${this.processImage(p.image)}" class="w-full h-full object-contain img-hover-scale">
                                 <span class="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">TOP</span>
                             </div>
                             <div class="p-3 border-t border-gray-50 bg-gray-50/50 flex-1 flex flex-col">
                                 <h3 class="text-gray-800 text-xs font-bold line-clamp-1 mb-1">${p.name}</h3>
-                                <p class="text-blue-600 font-bold text-sm mt-auto">${this.formatPrice(p.price)}</p>
+                                <div class="mt-auto flex justify-between items-center">
+                                    <p class="text-blue-600 font-bold text-sm">${this.formatPrice(p.price)}</p>
+                                    <button onclick="app.toggleCartItem('${p.sku}')" class="text-gray-400 hover:text-green-600"><i data-lucide="plus-circle" class="w-5 h-5"></i></button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -364,18 +523,21 @@
 
             renderCarousel() {
                 const track = document.getElementById('carousel-track');
-                if(track.children.length > 0) return; // Evitar re-render innecesario
+                if(track.children.length > 0) return;
 
                 const recent = this.allProducts.slice(0, 10); 
                 track.innerHTML = recent.map(p => `
-                    <div class="snap-start shrink-0 w-36 md:w-44 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
-                        <div class="h-36 md:h-44 bg-white p-3 relative flex items-center justify-center">
+                    <div class="snap-start shrink-0 w-36 md:w-44 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition hover:shadow-md">
+                        <div class="h-36 md:h-44 bg-white p-3 relative flex items-center justify-center cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
                             <img src="${this.processImage(p.image)}" class="w-full h-full object-contain" loading="lazy">
                             <span class="absolute top-2 right-2 bg-blue-100 text-blue-700 text-[8px] font-bold px-1.5 py-0.5 rounded">NUEVO</span>
                         </div>
                         <div class="p-2 md:p-3 flex-1 flex flex-col border-t border-gray-50">
                             <h4 class="text-[10px] md:text-xs font-bold text-gray-700 line-clamp-2 mb-1">${p.name}</h4>
-                            <p class="text-blue-600 font-bold text-xs md:text-sm mt-auto">${this.formatPrice(p.price)}</p>
+                            <div class="mt-auto flex justify-between items-center">
+                                <p class="text-blue-600 font-bold text-xs md:text-sm">${this.formatPrice(p.price)}</p>
+                                <button onclick="app.toggleCartItem('${p.sku}')" class="text-gray-400 hover:text-green-600"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
