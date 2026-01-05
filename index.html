@@ -196,13 +196,18 @@
         </div>
     </div>
 
+    <!-- Notificación Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[60] text-white font-medium text-sm hidden transition-all duration-300 text-center w-max max-w-[90%]">
+        Mensaje
+    </div>
+
     <script>
         const app = {
             apiUrl: "https://script.google.com/macros/s/AKfycbwczNs-lS1aUyJxpvSMuYGekx9zSHxNwWONxw3PdkLhTIbG3D6LqE7SLx4mgl-SwGV5/exec",
             whatsappNumber: "525542145295", 
             
             allProducts: [],
-            cart: [], // Array para guardar SKUs seleccionados
+            cart: [], 
             
             // Variables Scroll Infinito
             displayList: [], 
@@ -226,15 +231,23 @@
 
             // --- CARRITO DE COMPRAS ---
             toggleCartItem(sku) {
-                const index = this.cart.findIndex(item => item.sku === sku);
+                // CORRECCIÓN VITAL: Convertir todo a String para comparar
+                const strSku = String(sku);
+                const index = this.cart.findIndex(item => String(item.sku) === strSku);
+                
                 if (index > -1) {
                     this.cart.splice(index, 1); // Quitar
+                    this.notify("Eliminado del pedido", "error");
                 } else {
-                    const product = this.allProducts.find(p => p.sku === sku);
-                    if(product) this.cart.push({ ...product, qty: 1 }); // Agregar
+                    const product = this.allProducts.find(p => String(p.sku) === strSku);
+                    if(product) {
+                        this.cart.push({ ...product, qty: 1 }); // Agregar
+                        this.notify("¡Agregado al pedido!", "success");
+                    }
                 }
+                
                 this.updateCartUI();
-                this.updateUI(); // Refrescar botones
+                this.updateUI(); // Refrescar estado de botones
             },
 
             updateCartUI() {
@@ -246,9 +259,9 @@
                 
                 if (count > 0) {
                     fab.classList.remove('hidden');
-                    // Efecto rebote pequeño
+                    // Efecto rebote
                     badge.classList.remove('badge-anim');
-                    void badge.offsetWidth; // Trigger reflow
+                    void badge.offsetWidth; // Force reflow
                     badge.classList.add('badge-anim');
                 } else {
                     fab.classList.add('hidden');
@@ -260,12 +273,10 @@
                 const panel = document.getElementById('cart-panel');
                 
                 if (modal.classList.contains('hidden')) {
-                    // Abrir
                     modal.classList.remove('hidden');
                     this.renderCartItems();
                     setTimeout(() => panel.classList.remove('translate-x-full'), 10);
                 } else {
-                    // Cerrar
                     panel.classList.add('translate-x-full');
                     setTimeout(() => modal.classList.add('hidden'), 300);
                 }
@@ -283,6 +294,7 @@
                             <p>Tu pedido está vacío</p>
                         </div>`;
                     totalLabel.innerText = "$0.00";
+                    lucide.createIcons();
                     return;
                 }
 
@@ -336,7 +348,6 @@
                     if (json.status === 'success') {
                         this.allProducts = json.data;
                         this.updateUI();
-                        // Mantener sincronizado el carrito por si cambió algún precio o stock
                         this.syncCart(); 
                     }
                 } catch (e) {
@@ -347,9 +358,8 @@
             },
 
             syncCart() {
-                // Actualizar datos del carrito con la info fresca (ej. si cambió precio)
                 this.cart = this.cart.map(cartItem => {
-                    const freshItem = this.allProducts.find(p => p.sku === cartItem.sku);
+                    const freshItem = this.allProducts.find(p => String(p.sku) === String(cartItem.sku));
                     return freshItem ? { ...freshItem, qty: 1 } : cartItem;
                 });
                 this.updateCartUI();
@@ -460,12 +470,12 @@
 
             createProductCard(p) {
                 const isSoldOut = parseInt(p.stock) === 0;
-                const inCart = this.cart.some(item => item.sku === p.sku);
+                // Forzamos comparación String para el botón visual
+                const inCart = this.cart.some(item => String(item.sku) === String(p.sku));
                 
                 const card = document.createElement('div');
                 card.className = `product-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full fade-in ${isSoldOut ? 'opacity-70' : ''}`;
                 
-                // Botón dinámico (Agregar / Quitar)
                 const btnAction = isSoldOut 
                     ? `<button disabled class="bg-gray-100 text-gray-400 p-2 rounded-full cursor-not-allowed"><i data-lucide="slash" class="w-4 h-4"></i></button>`
                     : `<button onclick="event.stopPropagation(); app.toggleCartItem('${p.sku}')" class="${inCart ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'} p-2 rounded-full hover:scale-110 transition shadow-sm border border-transparent hover:border-gray-200">
@@ -501,7 +511,6 @@
                 
                 let html = '';
                 featured.forEach(p => {
-                    const inCart = this.cart.some(item => item.sku === p.sku);
                     html += `
                         <div class="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition hover:shadow-md">
                             <div class="h-40 md:h-48 bg-white p-4 flex items-center justify-center relative cursor-pointer" onclick="app.openImageModal('${this.processImage(p.image)}', '${p.name}')">
@@ -574,6 +583,14 @@
 
             formatPrice(p) {
                 return parseFloat(p).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+            },
+
+            notify(msg, type = 'success') {
+                const el = document.getElementById('notification');
+                el.innerText = msg;
+                el.className = `fixed top-24 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-[60] text-white font-medium text-sm transition-all duration-300 text-center w-max max-w-[90%] ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
+                el.classList.remove('hidden');
+                setTimeout(() => el.classList.add('hidden'), 3000);
             }
         };
 
