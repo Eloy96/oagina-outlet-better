@@ -17,7 +17,42 @@
     .cart-open #cart-backdrop { opacity: 1; pointer-events: auto; }
     .cart-open #cart-panel { transform: translateX(0); }
     .product-grid { grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); }
-    @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
+    .product-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); overflow: hidden; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .featured-card { flex: 0 0 168px; width: 168px; height: auto; }
+    .card-media { appearance: none; border: 0; border-bottom: 1px solid #f1f5f9; background: #fff; cursor: pointer; display: block; height: 168px; overflow: hidden; padding: 0; position: relative; width: 100%; }
+    .featured-card .card-media { height: 142px; }
+    .product-img { display: block; height: calc(100% - 16px); inset: 8px; max-height: calc(100% - 16px); max-width: calc(100% - 16px); object-fit: contain; position: absolute; width: calc(100% - 16px); }
+    .card-body { display: flex; flex: 1; flex-direction: column; min-height: 132px; padding: 12px; }
+    .featured-card .card-body { min-height: 124px; padding: 10px; }
+    .card-sku { color: #94a3b8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 10px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-name { color: #0f172a; display: -webkit-box; font-size: 14px; font-weight: 900; line-height: 1.25; margin-top: 5px; min-height: 36px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .featured-card .card-name { font-size: 12px; min-height: 31px; }
+    .card-footer { align-items: flex-end; display: flex; gap: 8px; justify-content: space-between; margin-top: auto; padding-top: 8px; }
+    .card-price { color: #0f172a; font-size: 18px; font-weight: 900; line-height: 1.1; }
+    .featured-card .card-price { font-size: 15px; }
+    .card-stock { color: #64748b; font-size: 10px; line-height: 1.2; margin-top: 3px; }
+    .cart-add, .cart-soldout { align-items: center; border: 0; border-radius: 999px; display: grid; flex: 0 0 auto; height: 38px; justify-items: center; width: 38px; }
+    .cart-add { background: #d1fae5; color: #047857; cursor: pointer; }
+    .cart-soldout { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
+    .cart-qty { align-items: center; background: #1d4ed8; border-radius: 999px; color: #fff; display: flex; flex: 0 0 auto; overflow: hidden; }
+    .cart-qty-button { align-items: center; background: transparent; border: 0; color: inherit; cursor: pointer; display: grid; height: 34px; place-items: center; width: 32px; }
+    .cart-qty-button:disabled { cursor: not-allowed; opacity: .45; }
+    .cart-qty-text { font-size: 12px; font-weight: 900; min-width: 24px; text-align: center; }
+    .image-placeholder { align-items: center; background: #f1f5f9; color: #cbd5e1; display: grid; inset: 8px; place-items: center; position: absolute; }
+    @media (min-width: 768px) {
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+      .card-media { height: 190px; }
+      .featured-card { flex-basis: 176px; width: 176px; }
+    }
+    @media (max-width: 480px) {
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card-media { height: 150px; }
+      .featured-card { flex-basis: 150px; width: 150px; }
+      .featured-card .card-media { height: 128px; }
+      .card-body { min-height: 126px; padding: 10px; }
+      .card-name { font-size: 13px; min-height: 34px; }
+      .card-price { font-size: 16px; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
@@ -265,15 +300,11 @@
       const inCart = state.cart[product.sku] || 0;
       const soldOut = product.stock <= 0;
       const card = document.createElement("article");
-      card.className = compact
-        ? "shrink-0 w-[150px] sm:w-[170px] rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden"
-        : "rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col";
+      card.className = compact ? "product-card featured-card" : "product-card";
 
       const imageButton = document.createElement("button");
       imageButton.type = "button";
-      imageButton.className = compact
-        ? "relative w-full h-[132px] bg-white p-2 grid place-items-center border-b border-slate-100"
-        : "relative w-full aspect-square max-h-[210px] bg-white p-2 grid place-items-center border-b border-slate-100";
+      imageButton.className = "card-media";
       imageButton.addEventListener("click", () => openImage(product));
 
       if (product.imageSafe) {
@@ -281,7 +312,7 @@
         img.src = product.imageSafe;
         img.alt = product.name;
         img.loading = "lazy";
-        img.className = "w-full h-full object-contain";
+        img.className = "product-img";
         img.onerror = () => img.replaceWith(imagePlaceholder());
         imageButton.appendChild(img);
       } else {
@@ -296,21 +327,21 @@
       }
 
       const body = document.createElement("div");
-      body.className = compact ? "p-2" : "p-3 flex flex-col flex-1";
+      body.className = "card-body";
 
       const sku = document.createElement("p");
-      sku.className = "font-mono text-[10px] text-slate-400 truncate";
+      sku.className = "card-sku";
       sku.textContent = "SKU: " + product.sku;
 
       const name = document.createElement("h3");
-      name.className = compact ? "mt-1 text-xs font-black leading-snug line-clamp-2 min-h-[32px]" : "mt-1 text-sm font-black leading-snug line-clamp-2 min-h-[38px]";
+      name.className = "card-name";
       name.textContent = product.name;
 
       const bottom = document.createElement("div");
-      bottom.className = "mt-2 flex items-end justify-between gap-2";
+      bottom.className = "card-footer";
 
       const price = document.createElement("div");
-      price.innerHTML = `<p class="${compact ? "text-sm" : "text-lg"} font-black">${formatPrice(product.price)}</p><p class="text-[10px] text-slate-500">Stock: ${product.stock}</p>`;
+      price.innerHTML = `<p class="card-price">${formatPrice(product.price)}</p><p class="card-stock">Stock: ${product.stock}</p>`;
 
       const actions = document.createElement("div");
       actions.appendChild(cartControl(product, inCart, soldOut));
@@ -326,7 +357,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.disabled = true;
-        button.className = "w-9 h-9 rounded-full bg-slate-100 text-slate-400 grid place-items-center";
+        button.className = "cart-soldout";
         button.innerHTML = '<i data-lucide="slash" class="w-4 h-4"></i>';
         return button;
       }
@@ -334,7 +365,7 @@
       if (!qty) {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center active:scale-95";
+        button.className = "cart-add";
         button.innerHTML = '<i data-lucide="plus" class="w-5 h-5"></i>';
         button.addEventListener("click", event => {
           event.stopPropagation();
@@ -345,7 +376,7 @@
       }
 
       const wrap = document.createElement("div");
-      wrap.className = "flex items-center rounded-full bg-blue-600 text-white overflow-hidden";
+      wrap.className = "cart-qty";
       wrap.append(
         qtyButton("minus", () => changeQty(product.sku, -1)),
         qtyText(qty),
@@ -358,7 +389,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.disabled = disabled;
-      button.className = "w-8 h-8 grid place-items-center disabled:opacity-40";
+      button.className = "cart-qty-button";
       button.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i>`;
       button.addEventListener("click", event => {
         event.stopPropagation();
@@ -369,7 +400,7 @@
 
     function qtyText(qty) {
       const span = document.createElement("span");
-      span.className = "w-7 text-center text-xs font-black";
+      span.className = "cart-qty-text";
       span.textContent = qty;
       return span;
     }
@@ -601,7 +632,7 @@
 
     function imagePlaceholder() {
       const div = document.createElement("div");
-      div.className = "w-full h-full min-h-16 bg-slate-100 text-slate-300 grid place-items-center";
+      div.className = "image-placeholder";
       div.innerHTML = '<i data-lucide="image-off" class="w-7 h-7"></i>';
       return div;
     }
